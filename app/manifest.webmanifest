@@ -1,0 +1,28 @@
+{
+ "name": "Sagoverkstaden",
+ "short_name": "Sagor",
+ "lang": "sv",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#f3e8d0",
+ "theme_color": "#7c3a66",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
