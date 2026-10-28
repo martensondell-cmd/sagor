@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Sagoinspelning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Grandstander:wght@700;800&display=swap">
+<style>
+:root{--ink:#2f2640;--soft:#66597a;--paper:#fffaf0;--paper2:#f3e8d0;--edge:#dcc9a4;--cover:#7c3a66;--pick:#ffd23f;--go:#7fd6b6;--rec:#d1342b;--recbg:#ffe3e1;
+  --f-d:"Grandstander","Trebuchet MS",system-ui,sans-serif;--f-b:"Andika",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--paper2);color:var(--ink);font-family:var(--f-b);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+.app{max-width:640px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;gap:12px;padding:max(14px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
+h1{font-family:var(--f-d);font-weight:800;color:var(--cover);font-size:1.35rem;line-height:1.2}
+.sub{color:var(--soft);font-size:.92rem}
+.bar{display:flex;align-items:center;gap:10px;background:var(--recbg);border:2.5px solid var(--rec);border-radius:16px;padding:8px 14px;font-family:var(--f-d);font-weight:700}
+.bar.idle{background:var(--paper);border-color:var(--edge)}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--rec);flex-shrink:0}
+.bar:not(.idle) .dot{animation:pulse 1s ease-in-out infinite}
+.bar.idle .dot{background:var(--edge)}
+@keyframes pulse{50%{opacity:.3}}
+#time{font-variant-numeric:tabular-nums}
+.meter{display:flex;gap:3px;align-items:flex-end;height:20px;margin-left:auto}
+.meter i{width:6px;height:100%;border-radius:3px;background:#f3c6c3}
+.meter i.on{background:var(--rec)}
+.of{font-variant-numeric:tabular-nums}
+.page{flex:1;min-height:0;overflow:auto;background:#fff;border:2.5px solid var(--edge);border-radius:18px;padding:16px 18px;font-size:1.3rem;line-height:1.65}
+.kick{font-family:var(--f-d);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-bottom:6px}
+.page p+p{margin-top:.6em}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.btn{font-family:var(--f-d);font-weight:800;font-size:1.25rem;border:3px solid var(--ink);border-radius:999px;padding:.75em 1.4em;background:var(--pick);color:var(--ink);box-shadow:0 4px 0 var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn.wide{width:100%}.row .btn.wide{flex:1;width:auto}
+.btn.rec{background:#ffb4b0}
+.btn.go{background:var(--go)}
+.btn.sec{background:var(--paper);font-size:1.05rem;padding:.7em 1.1em}
+.chip{font-family:var(--f-d);font-weight:700;font-size:.92rem;padding:.45em .95em;border-radius:999px;border:2.5px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer}
+.note{background:var(--paper);border:2px solid var(--edge);border-radius:14px;padding:12px 14px;line-height:1.5}
+.note ol{padding-left:1.2em}.note li+li{margin-top:.35em}
+.bad{color:#b4231b}
+.good{color:#1f7a55}
+.warn{color:#b4231b;font-weight:700}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main class="app" id="app"></main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const R={book:null,from:0,to:0,phase:'load',cur:0,t0:0,marks:{},end:0,stream:null,rec:null,chunks:[],ac:null,an:null,raf:0,tm:0,heard:false,blob:null,name:'',err:''};
+
+/* ---- läs sagan från länken ---- */
+function b64uDec(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const b=atob(s);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+async function readHash(){
+  const h=new URLSearchParams(location.hash.slice(1));const d=h.get('d');if(!d)return null;
+  let txt;const raw=b64uDec(d.slice(1));
+  if(d[0]==='z'){const ds=new DecompressionStream('deflate-raw');const w=ds.writable.getWriter();w.write(raw);w.close();txt=await new Response(ds.readable).text()}
+  else txt=new TextDecoder().decode(raw);
+  const b=JSON.parse(txt);return b&&Array.isArray(b.p)&&b.p.length?b:null}
+
+/* ---- inspelning ---- */
+function pickMime(){const c=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'];if(!window.MediaRecorder)return'';return c.find(x=>{try{return MediaRecorder.isTypeSupported(x)}catch(e){return false}})||''}
+async function micOn(){
+  if(R.stream)return true;
+  try{
+    R.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+    try{const AC=window.AudioContext||window.webkitAudioContext;R.ac=new AC();const src=R.ac.createMediaStreamSource(R.stream);R.an=R.ac.createAnalyser();R.an.fftSize=1024;src.connect(R.an);if(R.ac.state==='suspended')await R.ac.resume()}catch(e){}
+    return true}catch(e){R.err=e&&e.name||'fel';return false}}
+function micOff(){cancelAnimationFrame(R.raf);try{R.stream&&R.stream.getTracks().forEach(t=>t.stop())}catch(e){}try{R.ac&&R.ac.close()}catch(e){}R.stream=R.ac=R.an=null}
+async function start(){
+  const btn=$('#go');if(btn)btn.disabled=true;
+  if(!await micOn()){R.phase='denied';render();return}
+  const mt=pickMime();R.chunks=[];R.heard=false;
+  try{R.rec=new MediaRecorder(R.stream,mt?{mimeType:mt}:undefined)}catch(e){R.err='MediaRecorder';R.phase='denied';render();return}
+  R.rec.ondataavailable=e=>{if(e.data&&e.data.size)R.chunks.push(e.data)};
+  R.rec.onstop=()=>{if(R.phase==='abort'){R.chunks=[];return}R.blob=new Blob(R.chunks,{type:R.rec.mimeType||mt||'audio/mp4'});R.chunks=[];R.name=fileName();R.phase='done';micOff();render()};
+  R.rec.start(500);R.t0=Date.now();R.cur=R.from;R.marks={[R.from]:0};R.end=0;R.phase='run';wake(true);render();meter();
+  clearInterval(R.tm);R.tm=setInterval(tick,500)}
+function next(){if(R.cur>=R.to){stop();return}R.cur++;R.marks[R.cur]=Date.now()-R.t0;render()}
+function again(){if(R.cur>R.from){delete R.marks[R.cur];R.cur--}R.marks[R.cur]=Date.now()-R.t0;for(const k in R.marks)if(+k>R.cur)delete R.marks[k];render();flash('Läs sidan igen från början.')}
+function stop(){R.end=Date.now()-R.t0;R.to=R.cur;clearInterval(R.tm);wake(false);R.phase='saving';render();try{R.rec.stop()}catch(e){}}
+function abort(){R.phase='abort';clearInterval(R.tm);wake(false);try{R.rec.stop()}catch(e){}micOff();setTimeout(()=>{R.phase='ready';render()},50)}
+let WL=null;async function wake(on){try{if(on&&!WL&&navigator.wakeLock)WL=await navigator.wakeLock.request('screen');if(!on&&WL){const w=WL;WL=null;await w.release()}}catch(e){}}
+function tick(){const el=$('#time');if(el&&R.phase==='run'){const t=(Date.now()-R.t0)/1000;el.textContent=Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')}}
+function meter(){cancelAnimationFrame(R.raf);const d=new Uint8Array(1024);
+  const f=()=>{if(R.phase!=='run')return;let lv=0;if(R.an){R.an.getByteTimeDomainData(d);let s=0;for(let k=0;k<d.length;k++){const v=(d[k]-128)/128;s+=v*v}lv=Math.min(1,Math.sqrt(s/d.length)*5)}
+    if(lv>.12)R.heard=true;document.querySelectorAll('.meter i').forEach((b,k,a)=>b.classList.toggle('on',lv*a.length>k));
+    const h=$('#hear');if(h)h.hidden=!((Date.now()-R.t0)>4000&&!R.heard);R.raf=requestAnimationFrame(f)};f()}
+/* filnamnet bär sidbytena tillbaka till sagoappen */
+function fileName(){const cs=[];for(let k=R.from;k<=R.to;k++)cs.push(Math.round((R.marks[k]||0)/10));const ext=/webm/.test(R.blob.type)?'webm':/ogg/.test(R.blob.type)?'ogg':'m4a';
+  return `saga_${R.book.i}_${R.from}-${R.to}_${cs.join('-')}_e${Math.round(R.end/10)}.${ext}`}
+async function save(){
+  const f=new File([R.blob],R.name,{type:R.blob.type});
+  if(navigator.canShare&&navigator.canShare({files:[f]})&&/iPhone|iPad|iPod/.test(navigator.userAgent)){try{await navigator.share({files:[f]});R.saved=true;render();return}catch(e){if(e&&e.name==='AbortError')return}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(R.blob);a.download=R.name;document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),1000);R.saved=true;render()}
+function flash(t){const el=$('#msg');if(el){el.textContent=t;el.hidden=false;clearTimeout(flash.t);flash.t=setTimeout(()=>el.hidden=true,2500)}}
+
+/* ---- vy ---- */
+const lab=k=>{const n=R.book.p.length;return k===0?'Titelsidan':k===n-1?'Slutet':'Sida '+k};
+function pageHTML(k){return `<section class="page" aria-live="polite"><div class="kick">${lab(k)}</div>${String(R.book.p[k]||'').split(/\n+/).map(t=>`<p>${esc(t)}</p>`).join('')}</section>`}
+function render(){
+  const a=$('#app');
+  if(R.phase==='load'){a.innerHTML='<p class="sub">Öppnar sagan …</p>';return}
+  if(R.phase==='nobook'){a.innerHTML=`<h1>Sagoinspelning</h1><div class="note">Öppna den här sidan med knappen <b>Spela in med ett klick</b> i Sagoverkstaden, så följer sagans text med.</div>`;return}
+  const B=R.book,single=R.from===R.to,tot=R.to-R.from+1;
+  const head=`<div><h1>${esc(B.t||'Sagan')}</h1><p class="sub">${single?'Spela in '+lab(R.from).toLowerCase():'Spela in hela sagan, '+tot+' sidor'}</p></div>`;
+  if(R.phase==='ready'||R.phase==='denied'){
+    a.innerHTML=`${head}<div class="bar idle"><span class="dot"></span><span>Redo</span><span class="of" style="margin-left:auto">${single?'':'1/'+tot}</span></div>${pageHTML(R.from)}
+    ${R.phase==='denied'?`<div class="note"><b class="bad">Mikrofonen fick inte användas</b> (${esc(R.err)}).<br>Tryck på <b>aA</b> i adressfältet → <b>Webbplatsinställningar</b> → <b>Mikrofon: Tillåt</b>, och tryck på Spela in igen.</div>`:''}
+    <button class="btn rec wide" id="go"><span class="dot" style="border:2px solid var(--ink)"></span>Spela in</button>
+    <p class="sub">Ett tryck startar. ${single?'Tryck <b>Klar</b> när sidan är läst.':'Bläddra med <b>Nästa sida</b> och tryck <b>Klar</b> när du är färdig.'}</p>`;
+  }else if(R.phase==='run'){
+    const last=R.cur>=R.to;
+    a.innerHTML=`<div class="bar"><span class="dot"></span><span>Spelar in</span><span id="time">0:00</span><div class="meter" aria-hidden="true">${'<i></i>'.repeat(10)}</div><span class="of">${single?'':(R.cur-R.from+1)+'/'+tot}</span></div>
+    ${pageHTML(R.cur)}<p class="warn" id="hear" hidden>Ingen röst hörs än – kontrollera att mikrofonen inte är skymd.</p><p class="sub" id="msg" hidden></p>
+    <div class="row">${last?'':'<button class="btn go wide" id="next">Nästa sida →</button>'}<button class="btn ${last?'go wide':'sec'}" id="stop">■ Klar</button></div>
+    <div class="row between"><button class="chip" id="again">↺ Läs om ${R.cur>R.from?'förra sidan':'sidan'}</button><button class="chip" id="abort">✕ Avbryt</button></div>`;tick();
+  }else if(R.phase==='saving'){a.innerHTML=`${head}<p class="sub">Avslutar inspelningen …</p>`;
+  }else if(R.phase==='done'){
+    const secs=Math.round(R.end/1000);
+    a.innerHTML=`${head}<div class="note"><b class="good">✓ Inspelat</b> – ${tot} ${tot===1?'sida':'sidor'}, ${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}. ${R.saved?'':'Spara inspelningen så att sagan kan hämta den.'}</div>
+    <button class="btn ${R.saved?'sec':'go'} wide" id="save">${R.saved?'Spara igen':'⬇ Spara inspelningen'}</button>
+    ${R.saved?`<div class="note"><b>Sista steget:</b> gå tillbaka till Claude och tryck på <b>Hämta inspelningen</b>. Välj filen som börjar med <b>saga_</b> – sagan delar själv upp den i sidor.</div>`:`<p class="sub">${/iPhone|iPad|iPod/.test(navigator.userAgent)?'Välj <b>Spara i Filer</b> i rutan som öppnas.':'Filen hamnar bland dina hämtade filer.'}</p>`}
+    <button class="chip" id="redo" style="align-self:flex-start">↺ Spela in igen</button>`;
+  }
+  a.onclick=e=>{const t=e.target.closest('button');if(!t)return;
+    ({go:start,next,stop,again,abort,save,redo:()=>{if(R.saved||confirm('Kasta den här inspelningen och börja om?')){R.blob=null;R.saved=false;R.phase='ready';render()}}}[t.id]||(()=>{}))()};
+}
+(async()=>{try{R.book=await readHash()}catch(e){R.book=null}
+  if(!R.book){R.phase='nobook';render();return}
+  const n=R.book.p.length;R.from=Math.max(0,Math.min(n-1,R.book.f|0));R.to=R.book.l==null?n-1:Math.max(R.from,Math.min(n-1,R.book.l|0));
+  document.title='Spela in: '+(R.book.t||'sagan');R.phase='ready';render()})();
+addEventListener('beforeunload',e=>{if(R.phase==='run'||(R.phase==='done'&&!R.saved)){e.preventDefault();e.returnValue=''}});
+</script>
+</body>
+</html>
