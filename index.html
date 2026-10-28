@@ -46,6 +46,15 @@ h1{font-family:var(--f-d);font-weight:800;color:var(--cover);font-size:1.35rem;l
 .good{color:#1f7a55}
 .warn{color:#b4231b;font-weight:700}
 [hidden]{display:none!important}
+.list{display:flex;flex-direction:column;gap:8px}
+.pr{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--edge);border-radius:14px;padding:8px 10px}
+.pr b{font-family:var(--f-d);flex:1;min-width:0}
+.pr .dur{color:var(--soft);font-variant-numeric:tabular-nums;font-size:.9rem}
+.pr.weak{border-color:#e7a29c}
+.ib{width:44px;height:44px;border-radius:50%;border:2.5px solid var(--ink);background:var(--paper);font-size:1.05rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--ink)}
+.ib.on{background:var(--go)}
+.spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--edge);border-top-color:var(--ink);animation:spin 1s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -53,9 +62,11 @@ h1{font-family:var(--f-d);font-weight:800;color:var(--cover);font-size:1.35rem;l
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const R={book:null,from:0,to:0,phase:'load',cur:0,t0:0,marks:{},end:0,stream:null,rec:null,chunks:[],ac:null,an:null,raf:0,tm:0,heard:false,blob:null,name:'',err:''};
+const SR=22050,IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const R={book:null,from:0,to:0,phase:'load',cur:0,t0:0,marks:{},end:0,stream:null,rec:null,chunks:[],ac:null,an:null,raf:0,tm:0,heard:false,err:'',
+  pages:{},redo:null,player:null,playing:null,saved:false};
 
-/* ---- läs sagan från länken ---- */
+/* ---- sagan följer med i länken ---- */
 function b64uDec(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const b=atob(s);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
 async function readHash(){
   const h=new URLSearchParams(location.hash.slice(1));const d=h.get('d');if(!d)return null;
@@ -64,7 +75,7 @@ async function readHash(){
   else txt=new TextDecoder().decode(raw);
   const b=JSON.parse(txt);return b&&Array.isArray(b.p)&&b.p.length?b:null}
 
-/* ---- inspelning ---- */
+/* ---- mikrofon och inspelning ---- */
 function pickMime(){const c=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'];if(!window.MediaRecorder)return'';return c.find(x=>{try{return MediaRecorder.isTypeSupported(x)}catch(e){return false}})||''}
 async function micOn(){
   if(R.stream)return true;
@@ -74,31 +85,79 @@ async function micOn(){
     return true}catch(e){R.err=e&&e.name||'fel';return false}}
 function micOff(){cancelAnimationFrame(R.raf);try{R.stream&&R.stream.getTracks().forEach(t=>t.stop())}catch(e){}try{R.ac&&R.ac.close()}catch(e){}R.stream=R.ac=R.an=null}
 async function start(){
-  const btn=$('#go');if(btn)btn.disabled=true;
-  if(!await micOn()){R.phase='denied';render();return}
-  const mt=pickMime();R.chunks=[];R.heard=false;
-  try{R.rec=new MediaRecorder(R.stream,mt?{mimeType:mt}:undefined)}catch(e){R.err='MediaRecorder';R.phase='denied';render();return}
+  stopPlay();const btn=$('#go');if(btn)btn.disabled=true;
+  if(!await micOn()){R.phase=R.redo!=null?'redoReady':'denied';R.denied=true;render();return}
+  R.denied=false;const mt=pickMime();R.chunks=[];R.heard=false;
+  try{R.rec=new MediaRecorder(R.stream,mt?{mimeType:mt}:undefined)}catch(e){R.err='MediaRecorder';R.denied=true;R.phase='denied';render();return}
   R.rec.ondataavailable=e=>{if(e.data&&e.data.size)R.chunks.push(e.data)};
-  R.rec.onstop=()=>{if(R.phase==='abort'){R.chunks=[];return}R.blob=new Blob(R.chunks,{type:R.rec.mimeType||mt||'audio/mp4'});R.chunks=[];R.name=fileName();R.phase='done';micOff();render()};
-  R.rec.start(500);R.t0=Date.now();R.cur=R.from;R.marks={[R.from]:0};R.end=0;R.phase='run';wake(true);render();meter();
-  clearInterval(R.tm);R.tm=setInterval(tick,500)}
-function next(){if(R.cur>=R.to){stop();return}R.cur++;R.marks[R.cur]=Date.now()-R.t0;render()}
-function again(){if(R.cur>R.from){delete R.marks[R.cur];R.cur--}R.marks[R.cur]=Date.now()-R.t0;for(const k in R.marks)if(+k>R.cur)delete R.marks[k];render();flash('Läs sidan igen från början.')}
-function stop(){R.end=Date.now()-R.t0;R.to=R.cur;clearInterval(R.tm);wake(false);R.phase='saving';render();try{R.rec.stop()}catch(e){}}
-function abort(){R.phase='abort';clearInterval(R.tm);wake(false);try{R.rec.stop()}catch(e){}micOff();setTimeout(()=>{R.phase='ready';render()},50)}
+  R.rec.onstop=()=>{if(R.dropRec){R.dropRec=false;R.chunks=[];return}const blob=new Blob(R.chunks,{type:R.rec.mimeType||mt||'audio/mp4'});R.chunks=[];micOff();process(blob)};
+  R.rec.start(500);R.t0=Date.now();
+  if(R.redo!=null){R.cur=R.redo;R.marks={[R.redo]:0}}else{R.cur=R.from;R.marks={[R.from]:0}}
+  R.end=0;R.phase='run';wake(true);render();meter();clearInterval(R.tm);R.tm=setInterval(tick,500)}
+const lastPage=()=>R.redo!=null?R.redo:R.to;
+function next(){if(R.cur>=lastPage()){stop();return}R.cur++;R.marks[R.cur]=Date.now()-R.t0;render()}
+function again(){const first=R.redo!=null?R.redo:R.from;if(R.cur>first){delete R.marks[R.cur];R.cur--}R.marks[R.cur]=Date.now()-R.t0;for(const k in R.marks)if(+k>R.cur)delete R.marks[k];render();flash('Läs sidan igen från början.')}
+function stop(){R.end=Date.now()-R.t0;R.lastRead=R.cur;clearInterval(R.tm);wake(false);R.phase='processing';render();try{R.rec.stop()}catch(e){}}
+function abort(){clearInterval(R.tm);wake(false);R.dropRec=true;try{R.rec.stop()}catch(e){}micOff();
+  if(R.redo!=null){R.redo=null;R.phase='review'}else R.phase=Object.keys(R.pages).length?'review':'ready';render()}
 let WL=null;async function wake(on){try{if(on&&!WL&&navigator.wakeLock)WL=await navigator.wakeLock.request('screen');if(!on&&WL){const w=WL;WL=null;await w.release()}}catch(e){}}
-function tick(){const el=$('#time');if(el&&R.phase==='run'){const t=(Date.now()-R.t0)/1000;el.textContent=Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')}}
+function tick(){const el=$('#time');if(el&&R.phase==='run')el.textContent=fmt((Date.now()-R.t0)/1000)}
+const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
 function meter(){cancelAnimationFrame(R.raf);const d=new Uint8Array(1024);
   const f=()=>{if(R.phase!=='run')return;let lv=0;if(R.an){R.an.getByteTimeDomainData(d);let s=0;for(let k=0;k<d.length;k++){const v=(d[k]-128)/128;s+=v*v}lv=Math.min(1,Math.sqrt(s/d.length)*5)}
     if(lv>.12)R.heard=true;document.querySelectorAll('.meter i').forEach((b,k,a)=>b.classList.toggle('on',lv*a.length>k));
     const h=$('#hear');if(h)h.hidden=!((Date.now()-R.t0)>4000&&!R.heard);R.raf=requestAnimationFrame(f)};f()}
-/* filnamnet bär sidbytena tillbaka till sagoappen */
-function fileName(){const cs=[];for(let k=R.from;k<=R.to;k++)cs.push(Math.round((R.marks[k]||0)/10));const ext=/webm/.test(R.blob.type)?'webm':/ogg/.test(R.blob.type)?'ogg':'m4a';
-  return `saga_${R.book.i}_${R.from}-${R.to}_${cs.join('-')}_e${Math.round(R.end/10)}.${ext}`}
+
+/* ---- ljudbehandling: dela upp i sidor ---- */
+async function decode(blob){
+  const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;const ab=await blob.arrayBuffer();const ctx=new OAC(1,SR,SR);
+  const buf=await new Promise((res,rej)=>{const p=ctx.decodeAudioData(ab,res,rej);if(p&&p.then)p.then(res,rej)});
+  const n=buf.length,ch=buf.numberOfChannels;let out=ch===1?buf.getChannelData(0):(()=>{const o=new Float32Array(n);for(let c=0;c<ch;c++){const d=buf.getChannelData(c);for(let i=0;i<n;i++)o[i]+=d[i]/ch}return o})();
+  if(buf.sampleRate!==SR){const r=buf.sampleRate/SR,m=Math.floor(n/r),o=new Float32Array(m);for(let i=0;i<m;i++)o[i]=out[Math.floor(i*r)];out=o}
+  return out}
+function envelope(x){const F=Math.round(SR*.02),nf=Math.floor(x.length/F),env=new Float32Array(nf);for(let f=0;f<nf;f++){let s=0;for(let k=f*F;k<(f+1)*F;k+=2)s+=x[k]*x[k];env[f]=Math.sqrt(s/(F/2))}
+  const srt=Array.from(env).sort((a,b)=>a-b),q=p=>srt[Math.min(nf-1,Math.floor(nf*p))]||0;return{env,nf,th:q(.1)+(q(.95)-q(.1))*.12}}
+function trim(x){if(!x.length)return x;const{env,nf,th}=envelope(x);let a=0;while(a<nf&&env[a]<th)a++;let b=nf-1;while(b>a&&env[b]<th)b--;
+  const s=Math.max(0,Math.round((a*.02-.15)*SR)),e=Math.min(x.length,Math.round(((b+1)*.02+.25)*SR));return e>s?x.slice(s,e):new Float32Array(0)}
+function split(x,first,last){
+  const{env,nf,th}=envelope(x),W=15,sm=new Float32Array(nf);{let a=0;for(let f=0;f<nf;f++){a+=env[f];if(f>=W)a-=env[f-W];sm[f]=a/Math.min(f+1,W)}}
+  const fr=t=>Math.max(0,Math.min(nf-1,Math.round(t/.02)));const out={};let prev=0;const cuts=[];
+  for(let k=first+1;k<=last;k++){const b=(R.marks[k]||0)/1000;let bc=1e9,bt=b;for(let f=fr(b-.9);f<=fr(b+.9);f++){const t=(f-W/2)*.02,c=sm[f]/(th||1e-4)+.4*Math.abs(t-b);if(c<bc){bc=c;bt=t}}cuts.push(Math.max(prev+.2,bt));prev=cuts[cuts.length-1]}
+  const pts=[0,...cuts,x.length/SR];for(let k=first,j=0;k<=last;k++,j++)out[k]=trim(x.subarray(Math.round(pts[j]*SR),Math.round(pts[j+1]*SR)));
+  return out}
+async function process(blob){
+  try{const x=await decode(blob);
+    if(R.redo!=null){const k=R.redo;R.pages[k]=trim(x);R.redo=null;flash2=`${lab(k)} är inspelad igen.`}
+    else{const last=R.lastRead;Object.assign(R.pages,split(x,R.from,last));R.readTo=last}
+    R.saved=false;R.phase='review'}
+  catch(e){R.err=e&&e.message||'fel';R.phase='review';flash2='Inspelningen gick inte att läsa. Försök igen.'}
+  render()}
+let flash2='';
+
+/* ---- lyssna ---- */
+let PAC=null;function stopPlay(){try{R.player&&R.player.stop()}catch(e){}R.player=null;R.playing=null;document.querySelectorAll('.ib.on').forEach(b=>{b.classList.remove('on');b.textContent='▶'})}
+function play(k){const was=R.playing;stopPlay();if(was===k)return;const x=R.pages[k];if(!x||!x.length)return;
+  try{if(!PAC){const AC=window.AudioContext||window.webkitAudioContext;PAC=new AC()}PAC.resume&&PAC.resume();const b=PAC.createBuffer(1,x.length,SR);b.getChannelData(0).set(x);
+    const s=PAC.createBufferSource();s.buffer=b;s.connect(PAC.destination);s.onended=()=>{if(R.player===s)stopPlay()};s.start();R.player=s;R.playing=k;
+    const btn=document.querySelector(`[data-play="${k}"]`);if(btn){btn.classList.add('on');btn.textContent='■'}}catch(e){}}
+
+/* ---- spara: en fil, sidbytena i filnamnet ---- */
+function buildFile(){
+  const ks=[];for(let k=R.from;k<=R.to;k++)if(R.pages[k]&&R.pages[k].length)ks.push(k);
+  const gap=Math.round(SR*.8),lead=Math.round(SR*.4);let len=lead;ks.forEach((k,j)=>{len+=R.pages[k].length+(j<ks.length-1?gap:0)});len+=lead;
+  const i16=new Int16Array(len);let o=lead;const cs=[];
+  ks.forEach((k,j)=>{cs.push(Math.max(0,Math.round(((o-(j?gap/2:lead))/SR)*100)));const x=R.pages[k];for(let i=0;i<x.length;i++)i16[o+i]=Math.max(-1,Math.min(1,x[i]))*32767;o+=x.length+gap});
+  const n=i16.length,buf=new ArrayBuffer(44+n*2),v=new DataView(buf);const w=(p,t)=>{for(let i=0;i<t.length;i++)v.setUint8(p+i,t.charCodeAt(i))};
+  w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,SR,true);v.setUint32(28,SR*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);new Int16Array(buf,44).set(i16);
+  // sammanhängande sidor krävs av filnamnsformatet: tomma sidor får en kort tystnad
+  const name=`saga_${R.book.i}_${ks[0]}-${ks[ks.length-1]}_${cs.join('-')}_e${Math.round(len/SR*100)}.wav`;
+  return{blob:new Blob([buf],{type:'audio/wav'}),name,count:ks.length}}
 async function save(){
-  const f=new File([R.blob],R.name,{type:R.blob.type});
-  if(navigator.canShare&&navigator.canShare({files:[f]})&&/iPhone|iPad|iPod/.test(navigator.userAgent)){try{await navigator.share({files:[f]});R.saved=true;render();return}catch(e){if(e&&e.name==='AbortError')return}}
-  const a=document.createElement('a');a.href=URL.createObjectURL(R.blob);a.download=R.name;document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),1000);R.saved=true;render()}
+  stopPlay();for(let k=R.from;k<=R.to;k++)if(!R.pages[k]||!R.pages[k].length)R.pages[k]=new Float32Array(Math.round(SR*.3));
+  const{blob,name}=buildFile();const f=new File([blob],name,{type:'audio/wav'});
+  if(IOS&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f]});done();return}catch(e){if(e&&e.name==='AbortError')return}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),1000);done()}
+function done(){R.saved=true;R.phase='saved';render()}
 function flash(t){const el=$('#msg');if(el){el.textContent=t;el.hidden=false;clearTimeout(flash.t);flash.t=setTimeout(()=>el.hidden=true,2500)}}
 
 /* ---- vy ---- */
@@ -108,35 +167,47 @@ function render(){
   const a=$('#app');
   if(R.phase==='load'){a.innerHTML='<p class="sub">Öppnar sagan …</p>';return}
   if(R.phase==='nobook'){a.innerHTML=`<h1>Sagoinspelning</h1><div class="note">Öppna den här sidan med knappen <b>Spela in med ett klick</b> i Sagoverkstaden, så följer sagans text med.</div>`;return}
-  const B=R.book,single=R.from===R.to,tot=R.to-R.from+1;
-  const head=`<div><h1>${esc(B.t||'Sagan')}</h1><p class="sub">${single?'Spela in '+lab(R.from).toLowerCase():'Spela in hela sagan, '+tot+' sidor'}</p></div>`;
-  if(R.phase==='ready'||R.phase==='denied'){
-    a.innerHTML=`${head}<div class="bar idle"><span class="dot"></span><span>Redo</span><span class="of" style="margin-left:auto">${single?'':'1/'+tot}</span></div>${pageHTML(R.from)}
-    ${R.phase==='denied'?`<div class="note"><b class="bad">Mikrofonen fick inte användas</b> (${esc(R.err)}).<br>Tryck på <b>aA</b> i adressfältet → <b>Webbplatsinställningar</b> → <b>Mikrofon: Tillåt</b>, och tryck på Spela in igen.</div>`:''}
+  const B=R.book,single=R.from===R.to,tot=R.to-R.from+1,redo=R.redo!=null;
+  const head=`<div><h1>${esc(B.t||'Sagan')}</h1><p class="sub">${redo?'Gör om '+lab(R.redo).toLowerCase():single?'Spela in '+lab(R.from).toLowerCase():'Spela in hela sagan, '+tot+' sidor'}</p></div>`;
+  const denied=R.denied?`<div class="note"><b class="bad">Mikrofonen fick inte användas</b> (${esc(R.err)}).<br>Tryck på <b>aA</b> i adressfältet → <b>Webbplatsinställningar</b> → <b>Mikrofon: Tillåt</b>, och tryck på Spela in igen.</div>`:'';
+  if(R.phase==='ready'||R.phase==='denied'||R.phase==='redoReady'){
+    const k=redo?R.redo:R.from;
+    a.innerHTML=`${head}<div class="bar idle"><span class="dot"></span><span>Redo</span><span class="of" style="margin-left:auto">${single||redo?'':'1/'+tot}</span></div>${pageHTML(k)}${denied}
     <button class="btn rec wide" id="go"><span class="dot" style="border:2px solid var(--ink)"></span>Spela in</button>
-    <p class="sub">Ett tryck startar. ${single?'Tryck <b>Klar</b> när sidan är läst.':'Bläddra med <b>Nästa sida</b> och tryck <b>Klar</b> när du är färdig.'}</p>`;
+    ${redo?'<button class="chip" id="cancelRedo" style="align-self:flex-start">← Tillbaka till listan</button>':`<p class="sub">Ett tryck startar. ${single?'Tryck <b>Klar</b> när sidan är läst.':'Bläddra med <b>Nästa sida</b> och tryck <b>Klar</b> när du är färdig.'}</p>`}`;
   }else if(R.phase==='run'){
-    const last=R.cur>=R.to;
-    a.innerHTML=`<div class="bar"><span class="dot"></span><span>Spelar in</span><span id="time">0:00</span><div class="meter" aria-hidden="true">${'<i></i>'.repeat(10)}</div><span class="of">${single?'':(R.cur-R.from+1)+'/'+tot}</span></div>
+    const last=R.cur>=lastPage(),one=redo||single;
+    a.innerHTML=`<div class="bar"><span class="dot"></span><span>Spelar in</span><span id="time">0:00</span><div class="meter" aria-hidden="true">${'<i></i>'.repeat(10)}</div><span class="of">${one?'':(R.cur-R.from+1)+'/'+tot}</span></div>
     ${pageHTML(R.cur)}<p class="warn" id="hear" hidden>Ingen röst hörs än – kontrollera att mikrofonen inte är skymd.</p><p class="sub" id="msg" hidden></p>
     <div class="row">${last?'':'<button class="btn go wide" id="next">Nästa sida →</button>'}<button class="btn ${last?'go wide':'sec'}" id="stop">■ Klar</button></div>
-    <div class="row between"><button class="chip" id="again">↺ Läs om ${R.cur>R.from?'förra sidan':'sidan'}</button><button class="chip" id="abort">✕ Avbryt</button></div>`;tick();
-  }else if(R.phase==='saving'){a.innerHTML=`${head}<p class="sub">Avslutar inspelningen …</p>`;
-  }else if(R.phase==='done'){
-    const secs=Math.round(R.end/1000);
-    a.innerHTML=`${head}<div class="note"><b class="good">✓ Inspelat</b> – ${tot} ${tot===1?'sida':'sidor'}, ${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}. ${R.saved?'':'Spara inspelningen så att sagan kan hämta den.'}</div>
-    <button class="btn ${R.saved?'sec':'go'} wide" id="save">${R.saved?'Spara igen':'⬇ Spara inspelningen'}</button>
-    ${R.saved?`<div class="note"><b>Sista steget:</b> gå tillbaka till Claude och tryck på <b>Hämta inspelningen</b>. Välj filen som börjar med <b>saga_</b> – sagan delar själv upp den i sidor.</div>`:`<p class="sub">${/iPhone|iPad|iPod/.test(navigator.userAgent)?'Välj <b>Spara i Filer</b> i rutan som öppnas.':'Filen hamnar bland dina hämtade filer.'}</p>`}
-    <button class="chip" id="redo" style="align-self:flex-start">↺ Spela in igen</button>`;
+    <div class="row between"><button class="chip" id="again">↺ Läs om ${R.cur>(redo?R.redo:R.from)?'förra sidan':'sidan'}</button><button class="chip" id="abort">✕ Avbryt</button></div>`;tick();
+  }else if(R.phase==='processing'){a.innerHTML=`${head}<div class="row"><span class="spin"></span><p class="sub">Delar upp inspelningen i sidor …</p></div>`;
+  }else if(R.phase==='review'){
+    const ks=[];for(let k=R.from;k<=R.to;k++)ks.push(k);const missing=ks.filter(k=>!R.pages[k]||!R.pages[k].length);
+    a.innerHTML=`${head}${flash2?`<p class="note">${esc(flash2)}</p>`:''}
+    <button class="btn go wide" id="save">✓ Spara och gå tillbaka till sagan</button>
+    <p class="sub">Lyssna på sidorna. Blev något fel: tryck <b>↺</b> och läs bara den sidan igen.${missing.length?` <b class="bad">${missing.length===1?lab(missing[0])+' saknar':missing.length+' sidor saknar'} inspelning.</b>`:''}</p>
+    <div class="list">${ks.map(k=>{const x=R.pages[k],d=x?x.length/SR:0;return `<div class="pr ${d?'':'weak'}"><b>${lab(k)}</b><span class="dur">${d?fmt(d)+(d<60?'':'')+'':'–'}</span>${d?`<button class="ib" data-play="${k}" aria-label="Lyssna på ${lab(k)}">▶</button>`:''}<button class="ib" data-redo="${k}" aria-label="Spela in ${lab(k)} igen">↺</button></div>`}).join('')}</div>
+    <button class="chip" id="restart" style="align-self:flex-start">Spela in allt igen</button>`;flash2='';
+  }else if(R.phase==='saved'){
+    a.innerHTML=`${head}<div class="note"><b class="good">✓ Sparad.</b> Gå nu tillbaka till sagan och tryck på <b>Hämta inspelningen</b>. Filen överst (<b>saga_…</b>) är den här.</div>
+    ${B.r?`<a class="btn go wide" id="back" href="${esc(B.r)}">↩ Tillbaka till sagan</a>`:''}
+    ${IOS?'<p class="sub">Du kan också trycka på <b>◀ Claude</b> uppe i vänstra hörnet.</p>':''}
+    <div class="row between"><button class="chip" id="toReview">← Ändra en sida</button><button class="chip" id="save">Spara igen</button></div>`;
   }
   a.onclick=e=>{const t=e.target.closest('button');if(!t)return;
-    ({go:start,next,stop,again,abort,save,redo:()=>{if(R.saved||confirm('Kasta den här inspelningen och börja om?')){R.blob=null;R.saved=false;R.phase='ready';render()}}}[t.id]||(()=>{}))()};
+    if(t.dataset.play!=null){play(+t.dataset.play);return}
+    if(t.dataset.redo!=null){stopPlay();R.redo=+t.dataset.redo;R.phase='redoReady';render();return}
+    ({go:start,next,stop,again,abort,save,
+      cancelRedo:()=>{R.redo=null;R.phase='review';render()},
+      toReview:()=>{R.phase='review';render()},
+      restart:()=>{if(confirm('Kasta alla sidor och spela in hela sagan igen?')){stopPlay();R.pages={};R.phase='ready';render()}}}[t.id]||(()=>{}))()};
 }
 (async()=>{try{R.book=await readHash()}catch(e){R.book=null}
   if(!R.book){R.phase='nobook';render();return}
   const n=R.book.p.length;R.from=Math.max(0,Math.min(n-1,R.book.f|0));R.to=R.book.l==null?n-1:Math.max(R.from,Math.min(n-1,R.book.l|0));
   document.title='Spela in: '+(R.book.t||'sagan');R.phase='ready';render()})();
-addEventListener('beforeunload',e=>{if(R.phase==='run'||(R.phase==='done'&&!R.saved)){e.preventDefault();e.returnValue=''}});
+addEventListener('beforeunload',e=>{if(R.phase==='run'||(R.phase==='review'&&!R.saved)){e.preventDefault();e.returnValue=''}});
 </script>
 </body>
 </html>
