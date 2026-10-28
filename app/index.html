@@ -98,6 +98,15 @@ const ENGINES={
       const r=await realFetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:this.H(c),body:JSON.stringify({model,stream:true,messages:msgs(input)}),signal:o.signal});
       if(!r.ok)throw await apiErr(r,'ChatGPT');
       return sse(r,t=>o.onText&&o.onText({text:t}),j=>((j.choices||[])[0]||{}).delta&&j.choices[0].delta.content)}},
+  free:{label:'Gratis-AI (inget konto)',note:'Fungerar direkt utan konto och utan nyckel. Kan behöva vänta en stund mellan förfrågningar.',
+    async run(input,o){for(let tries=0;tries<6;tries++){
+        const r=await realFetch('https://text.pollinations.ai/openai',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model:'openai-fast',messages:msgs(input),stream:true,referrer:'sagoverkstaden'}),signal:o.signal});
+        if(r.status===402||r.status===429){const wait=Math.min(45,+(r.headers.get('retry-after')||15)||15);if(o.onWait)o.onWait(wait);await new Promise(x=>setTimeout(x,wait*1000+300));continue}
+        if(!r.ok)throw await apiErr(r,'Gratis-AI');
+        const ct=r.headers.get('content-type')||'';
+        if(/event-stream/.test(ct))return sse(r,t=>o.onText&&o.onText({text:t}),j=>((j.choices||[])[0]||{}).delta&&j.choices[0].delta.content);
+        const t=await r.text();try{const j=JSON.parse(t);return((j.choices||[])[0]||{}).message?j.choices[0].message.content:t}catch(e){return t}}
+      throw{code:'rate_limited',message:'Gratis-AI:n är upptagen just nu.'}}},
   builtin:{label:'Inbyggd AI i Chrome/Edge',note:'Gratis och helt lokalt på datorn. Kräver ny Chrome eller Edge på dator. Svenska stöds ännu inte officiellt, så texten kan bli sämre.',
     async status(){try{if(!('LanguageModel' in window))return'saknas';return await LanguageModel.availability()}catch(e){return'saknas'}},
     async run(input,o){if(!('LanguageModel' in window))throw{code:'tool_error',message:'Den här webbläsaren har ingen inbyggd AI.'};
@@ -117,14 +126,16 @@ const ENGINES={
     async run(input,o,c){const e=await this.engine(o,c);const ch=await e.chat.completions.create({messages:msgs(input),stream:true,temperature:.9});let all='';
       for await(const x of ch){const d=x.choices&&x.choices[0]&&x.choices[0].delta&&x.choices[0].delta.content;if(d){all+=d;o.onText&&o.onText({text:all})}}return all}}
 };
-async function pickEngine(){const c=cfg();const want=c.engine||'auto';
-  if(want==='none')return null;
-  if(want==='bridge')return'bridge';
-  if(want!=='auto'){const e=ENGINES[want];if(!e)return null;if(e.key&&!c[want+'Key'])return null;return want}
-  for(const k of['gemini','claude','openai'])if(c[k+'Key'])return k;
-  if(await ENGINES.builtin.status()==='available')return'builtin';
-  if(c.webllmReady&&navigator.gpu)return'webllm';
-  return'bridge'}
+/* vilka motorer som provas, i ordning; 'bridge' sist som reserv */
+async function chain(){const c=cfg();const want=c.engine||'auto';
+  if(want==='none')return[];
+  if(want==='bridge')return['bridge'];
+  if(want!=='auto'){const e=ENGINES[want];if(!e)return[];if(e.key&&!c[want+'Key'])return[];return want==='free'?['free','bridge']:[want]}
+  const out=[];for(const k of['gemini','claude','openai'])if(c[k+'Key'])out.push(k);
+  if(await ENGINES.builtin.status()==='available')out.push('builtin');
+  if(c.webllmReady&&navigator.gpu)out.push('webllm');
+  out.push('free','bridge');return out}
+async function pickEngine(){return(await chain())[0]||null}
 /* ---------- din egen AI-app: frågan kopieras dit, svaret klistras in här ---------- */
 const APPS=[
   {k:'chatgpt',n:'ChatGPT',u:q=>'https://chatgpt.com/?q='+q},
@@ -132,9 +143,9 @@ const APPS=[
   {k:'gemini',n:'Gemini',u:()=>'https://gemini.google.com/app'},
   {k:'copilot',n:'Copilot',u:q=>'https://copilot.microsoft.com/?q='+q}];
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){try{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return ok}catch(er){return false}}}
-function bridgeAsk(prompt,validate){return new Promise((resolve,reject)=>{
+function bridgeAsk(prompt,validate,why){return new Promise((resolve,reject)=>{
   const c=cfg(),last=c.bridgeApp||'chatgpt';const ov=document.createElement('div');ov.className='mback svbridge';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');
-  ov.innerHTML=`<div class="sheet" style="width:min(480px,100%)"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2>Skriv med din AI-app</h2><p class="mini">Gratis med appen du redan har. Två steg.</p></div><button class="chipbtn" data-b="cancel">Avbryt</button></div>
+  ov.innerHTML=`<div class="sheet" style="width:min(480px,100%)"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2>Skriv med din AI-app</h2><p class="mini">${why?'Gratis-AI:n svarar inte just nu. ':''}Gratis med appen du redan har. Två steg.</p></div><button class="chipbtn" data-b="cancel">Avbryt</button></div>
     <div><div class="lbl" style="margin:0 0 6px">1. Öppna din AI-app</div><div class="bapps">${APPS.map(a=>`<button class="btn ${a.k===last?'':'sec'}" data-app="${a.k}">${a.n}</button>`).join('')}</div>
       <p class="mini" id="bInfo">Frågan kopieras och appen öppnas. Står frågan inte redan ifylld: klistra in den och skicka.</p></div>
     <div><div class="lbl" style="margin:0 0 6px">2. Kopiera svaret och kom tillbaka</div><p class="mini">Tryck på kopiera-knappen vid svaret (oftast uppe till höger i kodrutan), gå tillbaka hit och tryck:</p>
@@ -161,15 +172,24 @@ function bridgeAsk(prompt,validate){return new Promise((resolve,reject)=>{
 })}
 function parseJSON(t){t=String(t||'').replace(/```(?:json)?/gi,'').trim();const a=t.indexOf('{'),b=t.lastIndexOf('}');const a2=t.indexOf('['),b2=t.lastIndexOf(']');
   let s=a>=0&&b>a?t.slice(a,b+1):(a2>=0&&b2>a2?t.slice(a2,b2+1):t);try{return JSON.parse(s)}catch(e){s=s.replace(/,\s*([}\]])/g,'$1').replace(/[“”]/g,m=>m);return JSON.parse(s)}}
-async function sample(input,opts){opts=opts||{};const k=await pickEngine();if(!k)throw cfg().engine==='none'?{code:'not_granted',message:'Ingen AI'}:{code:'no_provider',message:'Ingen AI vald'};
-  if(k==='bridge')throw{code:'bridge_plain',message:'Den här delen görs utan AI-app'};
-  try{const text=await ENGINES[k].run(input,opts,cfg());return{text,truncated:false,engine:k}}
+function waitNote(sec){const t='Gratis-AI:n har kö – fortsätter om '+sec+' sekunder …';const el=document.getElementById('gsub')||document.getElementById('aiProg');if(el)el.textContent=t;else if(window.toast)toast(t)}
+async function runEngine(k,input,opts){try{return await ENGINES[k].run(input,Object.assign({onWait:waitNote},opts),cfg())}
   catch(e){if(e&&e.name==='AbortError')throw{code:'cancelled'};if(e&&e.code)throw e;throw{code:'tool_error',message:String(e&&e.message||e)}}}
-sample.json=async(input,opts)=>{
-  if(await pickEngine()==='bridge'){const q=(typeof input==='string'?input:msgs(input).map(m=>m.content).join('\n\n'))+'\n\nSvara ENDAST med giltig JSON i ett enda kodblock (```json … ```), utan någon annan text.';return bridgeAsk(q,parseJSON)}
-  const ask=(typeof input==='string'?input:'')+'\n\nSvara endast med giltig JSON, utan förklaringar och utan kodblock.';
-  const r=await sample(typeof input==='string'?ask:input,opts);try{return parseJSON(r.text)}catch(e){
-    const r2=await sample(ask+'\n\nDitt förra svar var inte giltig JSON. Försök igen.',Object.assign({},opts,{onText:null}));return parseJSON(r2.text)}};
+async function sample(input,opts){opts=opts||{};const ks=(await chain()).filter(k=>k!=='bridge');
+  if(!ks.length)throw cfg().engine==='none'?{code:'not_granted',message:'Ingen AI'}:{code:'bridge_plain',message:'Den här delen görs utan AI'};
+  let last;for(const k of ks){try{return{text:await runEngine(k,input,opts),truncated:false,engine:k}}catch(e){if(e.code==='cancelled')throw e;last=e}}
+  throw last}
+const BRIDGE_TAIL='\n\nSvara ENDAST med giltig JSON i ett enda kodblock (```json … ```), utan någon annan text.';
+sample.json=async(input,opts)=>{opts=opts||{};const ks=await chain();
+  if(!ks.length)throw cfg().engine==='none'?{code:'not_granted',message:'Ingen AI'}:{code:'no_provider',message:'Ingen AI vald'};
+  const ask=(typeof input==='string'?input:msgs(input).map(m=>m.content).join('\n\n'))+'\n\nSvara endast med giltig JSON, utan förklaringar och utan kodblock.';
+  let last;
+  for(const k of ks){
+    if(k==='bridge')return bridgeAsk(ask.replace(/\n\nSvara endast med giltig JSON[^\n]*$/,'')+BRIDGE_TAIL,parseJSON,last);
+    try{const t=await runEngine(k,ask,opts);try{return parseJSON(t)}catch(e){const t2=await runEngine(k,ask+'\n\nDitt förra svar var inte giltig JSON. Svara bara med JSON-objektet.',Object.assign({},opts,{onText:null}));return parseJSON(t2)}}
+    catch(e){if(e&&e.code==='cancelled')throw e;last=e;DBGlog('AI '+k+' misslyckades: '+(e&&(e.code+' '+(e.message||'')).slice(0,120)))}}
+  throw last||{code:'tool_error'}};
+function DBGlog(m){try{window.DBG&&DBG.log(m)}catch(e){}}
 sample.limits=async()=>({images:false});
 
 /* ---------- ElevenLabs direkt ---------- */
@@ -219,8 +239,9 @@ async function open(after,why){onDone=after||null;const c=cfg();const m=document
   m.innerHTML=`<div class="mback" role="dialog" aria-modal="true" aria-labelledby="aih"><div class="sheet aisheet">
     <div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2 id="aih">AI-inställningar</h2><p class="mini">${esc(why||'Välj vem som skriver och översätter sagorna.')}</p></div><button class="chipbtn" id="aiClose">Stäng</button></div>
     <div class="aiopts">
-      ${opt('bridge','Din egen AI-app – gratis','ChatGPT, Claude, Gemini eller Copilot som du redan har. Frågan kopieras dit och du klistrar in svaret här.')}
-      ${opt('auto','Automatiskt','Använder en nyckel eller lokal AI om den finns, annars din AI-app')}
+      ${opt('auto','Automatiskt – gratis (rekommenderas)','Skriver direkt i appen med gratis-AI utan konto. Har du lagt in en nyckel används den först.')}
+      ${opt('free','Gratis-AI utan konto',ENGINES.free.note)}
+      ${opt('bridge','Din egen AI-app','ChatGPT, Claude, Gemini eller Copilot som du redan har. Frågan kopieras dit och du klistrar in svaret här.')}
       ${opt('gemini','Google Gemini – gratis nyckel','Skrivs direkt i appen utan klipp och klistra. Nyckeln är gratis med ett Google-konto.')}${keyRow('gemini','Gemini-nyckel (AIza…)')}
       ${opt('claude','Claude (Anthropic)',ENGINES.claude.note)}${keyRow('claude','Anthropic-nyckel (sk-ant-…)')}
       ${opt('openai','ChatGPT (OpenAI)',ENGINES.openai.note)}${keyRow('openai','OpenAI-nyckel (sk-…)')}
@@ -248,10 +269,10 @@ async function open(after,why){onDone=after||null;const c=cfg();const m=document
     if(t.id==='aiTest'||t.id==='aiSave'){let n;try{n=read()}catch(er){p.textContent=er.message;return}
       if(t.id==='aiSave'&&!onDone){m.innerHTML='';window.toast&&toast('Sparat');return}
       p.textContent='Testar …';t.disabled=true;
-      try{const k=await pickEngine();if(k==='bridge'){if(t.id==='aiSave'){const f=onDone;m.innerHTML='';onDone=null;f&&f();return}p.innerHTML='<b class="good">Klart.</b> När en saga skrivs öppnas din AI-app, och du klistrar in svaret här.';return}
+      try{const k=await pickEngine();if(k==='bridge'&&cfg().engine==='bridge'){if(t.id==='aiSave'){const f=onDone;m.innerHTML='';onDone=null;f&&f();return}p.innerHTML='<b class="good">Klart.</b> När en saga skrivs öppnas din AI-app, och du klistrar in svaret här.';return}
         if(!k){if(t.id==='aiSave'){const f=onDone;m.innerHTML='';onDone=null;f&&f();return}p.textContent='Ingen AI är vald. Sagorna skrivs då av den enklare sagomotorn.';return}
         const r=await sample('Skriv en mening på svenska om en glad katt.',{onText:({text})=>{p.textContent='Svarar: '+text.slice(-80)}});
-        p.innerHTML='<b class="good">Fungerar!</b> '+esc(ENGINES[k].label)+': ”'+esc(String(r.text).trim().slice(0,120))+'”';
+        p.innerHTML='<b class="good">Fungerar!</b> '+esc(ENGINES[r.engine].label)+': ”'+esc(String(r.text).trim().slice(0,120))+'”';
         if(t.id==='aiSave'){const f=onDone;setTimeout(()=>{m.innerHTML='';onDone=null;f&&f()},700)}}
       catch(er){p.innerHTML='<b class="bad">Fungerar inte än:</b> '+esc(er.code==='bad_key'?'nyckeln godtogs inte.':er.code==='rate_limited'?'tjänsten säger att kvoten är slut just nu.':String(er.message||er.code||er).slice(0,200))}
       finally{t.disabled=false}}};
