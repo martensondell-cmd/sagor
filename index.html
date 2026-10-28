@@ -159,6 +159,11 @@ async function save(){
   if(IOS&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f]});done();return}catch(e){if(e&&e.name==='AbortError')return}}
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),1000);done()}
 function done(){R.saved=true;R.phase='saved';render()}
+/* stäng fliken när man går tillbaka; går det inte töms den och skickar en tillbaka */
+function wipe(){stopPlay();R.pages={};R.book=null;R.phase='closed';try{history.replaceState(null,'',location.pathname)}catch(e){}
+  document.title='Klart';$('#app').innerHTML='<h1>Klart!</h1><p class="sub">Inspelningen är sparad. Den här fliken kan stängas.</p>'}
+function leave(url){wipe();try{window.close()}catch(e){}setTimeout(()=>{if(!window.closed&&url)location.replace(url)},250)}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&R.phase==='saved'){wipe();try{window.close()}catch(e){}}});
 function flash(t){const el=$('#msg');if(el){el.textContent=t;el.hidden=false;clearTimeout(flash.t);flash.t=setTimeout(()=>el.hidden=true,2500)}}
 
 /* ---- vy ---- */
@@ -193,9 +198,10 @@ function render(){
   }else if(R.phase==='saved'){
     a.innerHTML=`${head}<div class="note"><b class="good">✓ Sparad.</b> Gå nu tillbaka till sagan och tryck på <b>Hämta inspelningen</b>. Filen överst (<b>saga_…</b>) är den här.</div>
     ${B.r?`<a class="btn go wide" id="back" href="${esc(B.r)}">↩ Tillbaka till sagan</a>`:''}
-    ${IOS?'<p class="sub">Du kan också trycka på <b>◀ Claude</b> uppe i vänstra hörnet.</p>':''}
+    <p class="sub">Den här sidan stängs när du går tillbaka.${IOS?' Du kan också trycka på <b>◀ Claude</b> uppe i vänstra hörnet.':''}</p>
     <div class="row between"><button class="chip" id="toReview">← Ändra en sida</button><button class="chip" id="save">Spara igen</button></div>`;
   }
+  const bk=$('#back');if(bk)bk.onclick=e=>{e.preventDefault();leave(B.r)};
   a.onclick=e=>{const t=e.target.closest('button');if(!t)return;
     if(t.dataset.play!=null){play(+t.dataset.play);return}
     if(t.dataset.redo!=null){stopPlay();R.redo=+t.dataset.redo;R.phase='redoReady';render();return}
@@ -208,6 +214,7 @@ function render(){
   if(!R.book){R.phase='nobook';render();return}
   const n=R.book.p.length;R.from=Math.max(0,Math.min(n-1,R.book.f|0));R.to=R.book.l==null?n-1:Math.max(R.from,Math.min(n-1,R.book.l|0));
   document.title='Spela in: '+(R.book.t||'sagan');if(R.book.g)document.documentElement.lang=R.book.g;R.phase='ready';render()})();
+addEventListener('pageshow',e=>{if(e.persisted&&R.phase==='closed')try{window.close()}catch(er){}});
 addEventListener('beforeunload',e=>{if(R.phase==='run'||(R.phase==='review'&&!R.saved)){e.preventDefault();e.returnValue=''}});
 </script>
 </body>
