@@ -100,7 +100,7 @@ const ENGINES={
       return sse(r,t=>o.onText&&o.onText({text:t}),j=>((j.choices||[])[0]||{}).delta&&j.choices[0].delta.content)}},
   free:{label:'Gratis-AI (inget konto)',note:'Fungerar direkt utan konto och utan nyckel. Kan behöva vänta en stund mellan förfrågningar.',
     async run(input,o){for(let tries=0;tries<6;tries++){
-        const r=await realFetch('https://text.pollinations.ai/openai',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model:'openai-fast',messages:msgs(input),stream:true,referrer:'sagoverkstaden'}),signal:o.signal});
+        const r=await realFetch('https://text.pollinations.ai/openai',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model:'openai-fast',messages:msgs(input),stream:true,max_tokens:8000,referrer:'sagoverkstaden'}),signal:o.signal});
         if(r.status===402||r.status===429){const wait=Math.min(45,+(r.headers.get('retry-after')||15)||15);if(o.onWait)o.onWait(wait);await new Promise(x=>setTimeout(x,wait*1000+300));continue}
         if(!r.ok)throw await apiErr(r,'Gratis-AI');
         const ct=r.headers.get('content-type')||'';
@@ -170,8 +170,17 @@ function bridgeAsk(prompt,validate,why){return new Promise((resolve,reject)=>{
     if(t.dataset.b==='use'){tryUse(ov.querySelector('#bText').value);return}
     if(t.dataset.b==='paste'){try{tryUse(await navigator.clipboard.readText())}catch(er){ov.querySelector('#bManual').hidden=false;msg('Klistra in svaret i rutan nedan (håll inne och välj Klistra in).');ov.querySelector('#bText').focus()}}};
 })}
-function parseJSON(t){t=String(t||'').replace(/```(?:json)?/gi,'').trim();const a=t.indexOf('{'),b=t.lastIndexOf('}');const a2=t.indexOf('['),b2=t.lastIndexOf(']');
-  let s=a>=0&&b>a?t.slice(a,b+1):(a2>=0&&b2>a2?t.slice(a2,b2+1):t);try{return JSON.parse(s)}catch(e){s=s.replace(/,\s*([}\]])/g,'$1').replace(/[“”]/g,m=>m);return JSON.parse(s)}}
+function parseJSON(t){t=String(t||'').replace(/```(?:json)?/gi,'').trim();const a=t.indexOf('{');if(a<0){const a2=t.indexOf('[');if(a2>=0)return JSON.parse(t.slice(a2,t.lastIndexOf(']')+1));return JSON.parse(t)}
+  const b=t.lastIndexOf('}');let s=b>a?t.slice(a,b+1):t.slice(a);
+  try{return JSON.parse(s)}catch(e){}
+  try{return JSON.parse(s.replace(/,\s*([}\]])/g,'$1'))}catch(e){}
+  return repairJSON(t.slice(a))}
+/* avklippt svar: behåll alla hela sidor och stäng JSON:en */
+function repairJSON(s){let depth=[],inStr=false,esc=false,lastPageEnd=-1;
+  for(let i=0;i<s.length;i++){const ch=s[i];if(inStr){if(esc)esc=false;else if(ch==='\\')esc=true;else if(ch==='"')inStr=false;continue}
+    if(ch==='"')inStr=true;else if(ch==='{'||ch==='[')depth.push(ch);else if(ch==='}'||ch===']'){depth.pop();if(ch==='}'&&depth.length===2&&depth[1]==='[')lastPageEnd=i}}
+  if(lastPageEnd<0)throw new Error('ogiltig JSON');
+  const o=JSON.parse(s.slice(0,lastPageEnd+1)+']}');o.truncated=true;return o}
 function waitNote(sec){const t='Gratis-AI:n har kö – fortsätter om '+sec+' sekunder …';const el=document.getElementById('gsub')||document.getElementById('aiProg');if(el)el.textContent=t;else if(window.toast)toast(t)}
 async function runEngine(k,input,opts){try{return await ENGINES[k].run(input,Object.assign({onWait:waitNote},opts),cfg())}
   catch(e){if(e&&e.name==='AbortError')throw{code:'cancelled'};if(e&&e.code)throw e;throw{code:'tool_error',message:String(e&&e.message||e)}}}
@@ -443,7 +452,8 @@ textarea{width:100%;resize:vertical;min-height:70px}
 .quill{width:110px;height:110px;animation:write 1.4s ease-in-out infinite;transform-origin:20% 90%}
 @keyframes write{0%,100%{transform:rotate(-6deg) translateX(-6px)}50%{transform:rotate(4deg) translateX(8px)}}
 .pbar{width:min(320px,90%);height:20px;border:3px solid var(--ink);border-radius:99px;overflow:hidden;background:#fff}
-.pbar i{display:block;height:100%;width:4%;background:repeating-linear-gradient(-45deg,var(--pick),var(--pick) 10px,#ffe58a 10px,#ffe58a 20px);transition:width .5s;border-right:3px solid var(--ink)}
+.pbar i{display:block;height:100%;width:4%;background:repeating-linear-gradient(-45deg,var(--pick),var(--pick) 10px,#ffe58a 10px,#ffe58a 20px);background-size:28px 28px;animation:barmove 1s linear infinite;transition:width .2s linear;border-right:3px solid var(--ink)}
+@keyframes barmove{to{background-position:28px 0}}
 .pbar.think i{width:30%;animation:think 1.6s ease-in-out infinite alternate}
 @keyframes think{from{margin-left:0}to{margin-left:70%}}
 .msg{font-family:var(--f-display);font-weight:700;color:var(--ink-soft);min-height:1.4em}
@@ -865,7 +875,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v25 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v26 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1440,7 +1450,7 @@ LYSSNARE: ${who}. Anpassa språk, ordförråd, meningslängd och hur läskigt de
 INGREDIENSER (alla ska märkas tydligt i sagan):
 ${ing}${implicitHero}${kidsLine}
 ${c.extra?`\nEXTRA ÖNSKEMÅL: ${c.extra}\n`:''}${seq}
-LÄNGD: exakt ${c.pages} sidor, cirka ${c.wpp} ord per sida (ungefär ${c.minutes} minuters högläsning).
+LÄNGD: exakt ${c.pages} sidor, cirka ${c.wpp} ord per sida (ungefär ${c.minutes} minuters högläsning). Skriv alla ${c.pages} sidorna hela vägen till slutet – sluta aldrig mitt i. Inga kommentarer utanför JSON.
 ${(()=>{const k=storyConcept(),rs=recentStories();return `SAGANS GRUNDIDÉ (ny för varje saga – bygg handlingen kring den):
 - Problem: ${k.core}
 - Något speciellt i sagan: ”den ${k.thing}” – tolka fritt och gör en egen, oväntad version
@@ -1460,7 +1470,7 @@ BILDER: För varje sida välj
 - "action": "lugn", "glad", "jakt", "radd" eller "sova"
 
 Svara ENDAST med JSON i detta format:
-{"title":"kort, lockande titel","dedication":"en kort rad till lyssnarna","pages":[{"text":"...","scene":"...","cast":["..."],"time":"dag","action":"lugn"}],"summary":"2–3 meningar om vad som hänt, för en ev. fortsättning","next":${c.ending==='cliff'?'["...","...","..."]':'[]'}}`;
+{"title":"kort, lockande titel","dedication":"max 8 ord till lyssnarna","pages":[{"text":"...","scene":"...","cast":["..."],"time":"dag","action":"lugn"}],"summary":"1–2 korta meningar om vad som hänt","next":${c.ending==='cliff'?'["...","...","..."]':'[]'}}`;
 }
 function normalize(raw,c){
   if(!raw||!Array.isArray(raw.pages))throw{code:'invalid_json'};
@@ -1512,10 +1522,13 @@ async function startStory(o){
   const smp=SAMPLE||await Promise.race([sampleP,new Promise(r=>setTimeout(()=>r(null),2500))]);
   if(!smp){finishStory(offlineStory(c),'Den här sagan skrevs utan AI.');return}
   const ctl=new AbortController();GEN.ctl=ctl;
-  const expected=c.pages*c.wpp*6.3+c.pages*95+300;
+  progStart(c);
   try{
-    const raw=await smp.json(buildPrompt(c),{modelTier:'default',cache:false,signal:ctl.signal,onText:({text})=>genStatus('write',Math.min(.97,text.length/expected))});
-    finishStory(normalize(raw,c));
+    const opts={modelTier:'default',cache:false,signal:ctl.signal,onText:({text})=>progText(text)};
+    let st=normalize(await smp.json(buildPrompt(c),opts),c);
+    if(st.pages.length<Math.max(2,c.pages-1)){DBG.log('sagan blev för kort ('+st.pages.length+'/'+c.pages+'), försöker igen');progStart(c,true);
+      try{const st2=normalize(await smp.json(buildPrompt(c)+`\n\nVIKTIGT: Förra försöket blev för kort. Skriv ALLA ${c.pages} sidorna, hela vägen till slutet.`,opts),c);if(st2.pages.length>st.pages.length)st=st2}catch(e){if(e&&e.code==='cancelled')throw e}}
+    await progFinish();finishStory(st);
   }catch(e){
     if(e&&e.code==='cancelled'){show('bygg');return}
     const code=e&&e.code;
@@ -1533,11 +1546,19 @@ function genStatus(phase,p){
     $('#genR').innerHTML=`<div class="gen"><svg class="quill" viewBox="0 0 100 100" aria-hidden="true"><path d="M20 90 L70 20 q14-14 22-8 q4 10-12 22 L26 92Z" fill="#fff" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><path d="M30 80 L76 26" stroke="${K}" stroke-width="2.5"/><path d="M14 94 q8-2 12-8" stroke="${K}" stroke-width="3" fill="none"/></svg><h2>Sagan skrivs …</h2><div class="pbar" id="pbar"><i></i></div><p class="msg" id="gmsg" aria-live="polite"></p><p class="mini" id="gsub"></p><button class="btn sec" id="gStop">Avbryt</button></div>`;
     $('#gStop').onclick=()=>{GEN.ctl?.abort();show('bygg')};
   }
-  const pb=$('#pbar');pb.classList.toggle('think',phase==='think');
-  if(phase==='write'){pb.querySelector('i').style.width=Math.round(p*100)+'%';$('#gsub').textContent=`Sida ${Math.max(1,Math.ceil(p*c.pages))} av ${c.pages}`}
-  else $('#gsub').textContent=`${c.pages} sidor · ungefär ${c.minutes} minuter`;
-  let i=0;const tick=()=>{$('#gmsg').textContent=msgs[i++%msgs.length]};tick();GEN.timer=setInterval(tick,2600);
+  $('#gsub').textContent=`${c.pages} sidor · ungefär ${c.minutes} minuters läsning`;
+  let i=0;const tick=()=>{const el=$('#gmsg');if(el)el.textContent=msgs[i++%msgs.length]};tick();GEN.timer=setInterval(tick,2600);
 }
+/* framstegsmätare: jämn tidsuppskattning som skärps av den text som faktiskt kommer in */
+const PROG={};
+function progStart(c,keep){cancelAnimationFrame(PROG.raf);const base=keep?Math.min(.8,PROG.p||0):0;Object.assign(PROG,{c,base,t0:performance.now(),txt:0,seen:0,p:base,done:false,exp:c.pages*c.wpp*6.3+c.pages*95+300});PROG.est=Math.max(10,PROG.exp/60);
+  const tick=()=>{if(PROG.done)return;progDraw();PROG.raf=requestAnimationFrame(tick)};tick()}
+function progText(t){PROG.txt=t.length;PROG.seen=(t.match(/"text"\s*:/g)||[]).length;const el=(performance.now()-PROG.t0)/1000;if(PROG.txt>300&&el>1.5)PROG.est=Math.max(el+1,PROG.exp/(PROG.txt/el))}
+function progDraw(){const b=$('#pbar i'),sub=$('#gsub');if(!b||!PROG.c)return;$('#pbar').classList.remove('think');
+  const el=(performance.now()-PROG.t0)/1000,tp=.93*(1-Math.exp(-2.2*el/PROG.est)),xp=Math.min(.97,PROG.txt/PROG.exp);
+  PROG.p=Math.max(PROG.p,PROG.base+(1-PROG.base)*Math.max(tp,xp));b.style.width=(4+PROG.p*96).toFixed(1)+'%';
+  if(sub){const n=PROG.c.pages;sub.textContent=PROG.seen?`Skriver sida ${Math.min(PROG.seen,n)} av ${n}`:el>2?`Hittar på handlingen … (${n} sidor)`:`${n} sidor · ungefär ${PROG.c.minutes} minuters läsning`}}
+function progFinish(){return new Promise(r=>{PROG.done=true;cancelAnimationFrame(PROG.raf);const b=$('#pbar i'),sub=$('#gsub');if(b){b.style.transition='width .35s';b.style.width='100%'}if(sub)sub.textContent='Klar!';setTimeout(r,380)})}
 function genError(msg,retry){
   clearInterval(GEN.timer);
   $('#genR').innerHTML=`<div class="gen"><svg class="ic" style="width:90px;height:90px" viewBox="0 0 100 100"><use href="#s-spoke"/></svg><h2>Oj då!</h2><p class="lead">${esc(msg)}</p><div class="row" style="justify-content:center">${retry?'<button class="btn" id="gRetry">Försök igen</button>':''}<button class="btn sec" id="gOff">Läs en enklare saga</button><button class="btn sec" data-go="bygg">Ändra bilderna</button></div></div>`;
