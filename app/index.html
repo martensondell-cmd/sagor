@@ -526,6 +526,11 @@ input[type=checkbox]{width:22px;height:22px;accent-color:var(--cover)}
 .sttext.live{border-color:#d1342b;box-shadow:0 0 0 3px #ffe3e1}
 .dglog{white-space:pre-wrap;word-break:break-word;font-size:.75rem;max-height:40vh;overflow:auto;background:#fff;border:2px solid var(--edge);border-radius:10px;padding:8px;user-select:text;-webkit-user-select:text;margin:0}
 .studio{width:min(720px,100%);gap:12px}
+.steps3{list-style:none;margin:0;padding:0;display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.steps3 li{display:flex;align-items:center;gap:5px;white-space:nowrap;font-family:var(--f-display);font-weight:700;font-size:.9rem;background:var(--pick-soft);border-radius:99px;padding:.25em .7em .25em .3em}
+.steps3 b{display:inline-grid;place-items:center;width:1.5em;height:1.5em;border-radius:50%;background:var(--pick);border:2px solid var(--ink);font-size:.8rem}
+.qnext{margin-left:auto;padding:.3em .8em;font-size:.85rem}
+.endmore .chipbtn{font-size:.85rem}
 .lflag{font-size:1.2rem;line-height:1}
 .langs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .lang{display:flex;align-items:center;gap:8px;padding:10px 12px;border:2.5px solid var(--ink);border-radius:14px;background:var(--paper);color:var(--ink);font-family:var(--f-display);font-size:1rem;cursor:pointer;text-align:left}
@@ -628,7 +633,8 @@ a.chipbtn,a.btn{text-decoration:none;display:inline-flex;align-items:center;just
   #v-read:not([hidden]){display:flex;flex-direction:column}
   .rbar{margin-bottom:6px;gap:6px;flex-wrap:nowrap}
   .rbar .t{font-size:1rem}
-  .rbar .blab{display:none}
+  .rbar .blab{display:block;font-size:.58rem;line-height:1;max-width:4.6em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+  .rbar .chipbtn.ib{flex-direction:column;gap:2px;padding:.3em .45em .25em}
   .chipbtn.ib{padding:.4em .55em}
   #v-read .book{flex:1;min-height:0;grid-template-rows:auto minmax(0,1fr)}
   #v-read .page.r{overflow:auto;min-height:0}
@@ -651,7 +657,8 @@ a.chipbtn,a.btn{text-decoration:none;display:inline-flex;align-items:center;just
   .ribbons{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-bottom:8px}
   .ribbons::-webkit-scrollbar{display:none}
   .rib{flex:none}
-  .qhead{margin-bottom:4px}.qhead h2{font-size:1.25rem}.qhead .hint{display:none}
+  .qhead{margin-bottom:4px;flex-wrap:nowrap;align-items:center}.qhead h2{font-size:1.2rem}.qhead .hint{display:none}
+  .home .lead{display:none}.steps3{flex-wrap:nowrap;gap:4px}.steps3 li{font-size:.72rem;padding:.2em .5em .2em .25em}
   .grid{grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:2px}
   .tile{font-size:.76rem;padding:4px 2px 6px}
   .tile svg{width:52px;height:52px}
@@ -785,7 +792,8 @@ a.chipbtn,a.btn{text-decoration:none;display:inline-flex;align-items:center;just
         <div class="page r"><div class="titlep">
           <div class="kicker">Kvällens saga</div>
           <h1>Välj bilder. Få en saga.</h1>
-          <p class="lead">Bygg sagan av 3–10 bilder: när det händer, var, vem som är modig och vem som är läskig. Sagan blir ny varje gång – och kan läsas upp av en röst ni väljer.</p>
+          <ol class="steps3"><li><b>1</b>Välj bilder</li><li><b>2</b>Längd och namn</li><li><b>3</b>Läs sagan</li></ol>
+          <p class="lead">Välj 3–10 bilder – när, var, vem som är modig och vem som är läskig – så skrivs en helt ny saga.</p>
           <div class="actions">
             <button class="btn" data-go="bygg"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#s-magiskt"/></svg>Bygg en ny saga</button>
             <button class="btn sec" data-go="hyllan" id="homeLib">Bokhyllan</button>
@@ -800,7 +808,7 @@ a.chipbtn,a.btn{text-decoration:none;display:inline-flex;align-items:center;just
       <div class="bwrap">
         <div class="page l"><div class="bl">
           <div class="ribbons" role="tablist" id="ribbons"></div>
-          <div class="qhead"><h2 id="qtitle"></h2><span class="hint" id="qhint"></span></div>
+          <div class="qhead"><h2 id="qtitle"></h2><span class="hint" id="qhint"></span><button class="chipbtn qnext" id="qnext"></button></div>
           <div class="grid" id="tiles"></div>
         </div></div>
         <div class="page r"><div class="br" id="recipe"></div></div>
@@ -817,12 +825,12 @@ a.chipbtn,a.btn{text-decoration:none;display:inline-flex;align-items:center;just
 
     <section id="v-read" hidden>
       <div class="rbar">
-        <button class="chipbtn ib" id="rBack" aria-label="Stäng boken"><svg class="bi" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="blab">Stäng boken</span></button>
+        <button class="chipbtn ib" id="rBack" aria-label="Stäng boken"><svg class="bi" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="blab">Stäng</span></button>
         <div class="t" id="rTitle"></div>
         <button class="chipbtn ib readbtn" id="rRead"></button>
         <button class="chipbtn ib" id="rLang" aria-label="Byt språk"><span class="lflag" id="rLangF">🇸🇪</span><span class="blab" id="rLangL">Språk</span></button>
         <button class="chipbtn ib" id="rVoice" aria-label="Byt röst"><svg class="bi" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M4 21q0-7 8-7t8 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="blab" id="rVoiceL">Röst</span></button>
-        <button class="chipbtn ib" id="rRec" aria-label="Riktig berättarröst"><svg class="bi" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="blab">Röstinspelning</span></button>
+        <button class="chipbtn ib" id="rRec" aria-label="Riktig berättarröst"><svg class="bi" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="blab">Inspelning</span></button>
         <button class="chipbtn ib" id="rFilm" aria-label="Spara som film"><svg class="bi" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 10l5-3v10l-5-3z" fill="currentColor"/></svg><span class="blab">Film</span></button>
         <button class="round heart" id="rFav" aria-label="Spara som favorit" style="width:44px;height:44px"><svg viewBox="0 0 30 30"><path d="M15 26C5 19 2 14 4 9c2-5 8-6 11-1 3-5 9-4 11 1 2 5-1 10-11 17z" stroke="#2f2640" stroke-width="2.6" stroke-linejoin="round"/></svg></button>
       </div>
@@ -857,7 +865,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v24 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v25 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1288,6 +1296,8 @@ function renderBuild(){
   rb.innerHTML=CATS.map(c=>{const n=S.sel.filter(k=>I[k].cat===c.id).length;return `<button class="rib" role="tab" aria-selected="${S.cat===c.id}" data-cat="${c.id}" style="background:${c.c}">${c.rib}${n?`<span class="n">${n}</span>`:''}</button>`}).join('');
   const cat=CATS.find(c=>c.id===S.cat);
   $('#qtitle').textContent=cat.q;$('#qhint').textContent='Tryck på en bild';
+  const ci=CATS.indexOf(cat),nx=CATS[(ci+1)%CATS.length];const qn=$('#qnext');qn.textContent=ci<CATS.length-1?`${nx.rib} →`:'Till början ↺';qn.dataset.cat=nx.id;
+  if(!LS.get('coachBuild',false)&&!S.sel.length)$('#qhint').innerHTML='<b>Tryck på bilder du gillar.</b> Byt fråga med flikarna eller pilen.';
   $('#tiles').innerHTML=catKeys(cat.id).map(k=>`<button class="tile" data-k="${k}" aria-pressed="${S.sel.includes(k)}">${ic(k,'')}<span class="tl">${esc(I[k].label)}</span></button>`).join('');
   renderRecipe();fitTiles();
 }
@@ -1302,11 +1312,12 @@ function fitTiles(){
 }
 addEventListener('resize',()=>{if(S.view==='bygg')fitTiles()});
 $('#ribbons').addEventListener('click',e=>{const b=e.target.closest('.rib');if(b){S.cat=b.dataset.cat;renderBuild()}});
+$('#qnext').addEventListener('click',e=>{S.cat=e.currentTarget.dataset.cat;renderBuild();const r=document.querySelector(`.rib[data-cat="${S.cat}"]`);if(r)r.scrollIntoView({inline:'center',block:'nearest'})});
 $('#tiles').addEventListener('click',e=>{const b=e.target.closest('.tile');if(!b)return;toggleSel(b.dataset.k)});
 function toggleSel(k){
   const i=S.sel.indexOf(k);
   if(i>=0)S.sel.splice(i,1);
-  else{if(S.sel.length>=10){toast('Max 10 bilder. Tryck på en vald bild för att ta bort den.');return}S.sel.push(k)}
+  else{if(S.sel.length>=10){toast('Max 10 bilder. Tryck på en vald bild för att ta bort den.');return}S.sel.push(k);LS.set('coachBuild',true)}
   renderBuild();
 }
 function inStoryHTML(){if(!S.kids.length)return'';return `<div><div class="lbl">Vilka barn är med i sagan?</div><div class="kidchips">${S.kids.map(k=>`<button class="kc kcav" data-instory="${k.id}" aria-pressed="${S.inStory.includes(k.id)}" style="--kc:${kidCol(k.id)}">${ic(kidKey(k.id),'')}${esc(k.name)}</button>`).join('')}</div><p class="mini">Barnen blir egna figurer i sagan och räknas inte in bland de 10 bilderna.</p></div>`}
@@ -1317,7 +1328,7 @@ function renderRecipe(){
   const kids=S.kids.length?`<div class="kidchips">${S.kids.map(k=>`<button class="kc" data-listen="${k.id}" aria-pressed="${S.listen.includes(k.id)}" style="--kc:${kidCol(k.id)}">${esc(k.name)}, ${k.age} år</button>`).join('')}</div>`
     :`<div class="row"><label for="ageSel" class="mini">Lyssnarens ålder</label><select id="ageSel">${Array.from({length:12},(_,i)=>`<option ${S.age===i+1?'selected':''}>${i+1}</option>`).join('')}</select></div><p class="mini">Tips: lägg in barnen under <button class="link" data-go="barnen">Barnen</button> så kommer sagorna ihåg dem.</p>`;
   $('#recipe').innerHTML=`<div><h2>Din saga</h2><div class="count">${n} av 10 bilder${n<3?` · välj minst ${3-n} till`:''}</div></div><div class="slots">${slots}</div><div><div class="lbl">Vem lyssnar i kväll?</div>${kids}</div>${inStoryHTML()}<button class="btn go" id="doneBtn" ${ok?'':'disabled'}>Klar – nästan dags för saga</button>${n?`<button class="link" id="clearSel">Börja om</button>`:''}`;
-  $('#tray').innerHTML=`<div class="ics">${S.sel.map(k=>`<span data-rm="${k}" role="button" aria-label="Ta bort ${esc(I[k].label)}">${ic(k,'')}</span>`).join('')||'<span class="mini">Välj 3–10 bilder</span>'}</div><span class="count">${n}/10</span><button class="btn go" id="doneBtn2" ${ok?'':'disabled'}>Klar</button>`;
+  $('#tray').innerHTML=`<div class="ics">${S.sel.map(k=>`<span data-rm="${k}" role="button" aria-label="Ta bort ${esc(I[k].label)}">${ic(k,'')}</span>`).join('')||'<span class="mini"><b>Steg 1 av 2:</b> välj 3–10 bilder</span>'}</div>${ok?'':`<span class="count">${n?'Minst '+(3-n)+' till':''}</span>`}<button class="btn go" id="doneBtn2" ${ok?'':'disabled'}>Nästa →</button>`;
 }
 $('#recipe').addEventListener('click',e=>{
   const rm=e.target.closest('[data-rm]');if(rm)return toggleSel(rm.dataset.rm);
@@ -1338,20 +1349,20 @@ function openFinish(){
   if(S.kids.length&&!S.listen.length)S.listen=S.kids.map(k=>k.id);
   const fields=S.sel.filter(NEEDS).map(k=>{
     const it=I[k];
-    if(k==='barnet'){const opts=listenKids().length?listenKids():S.kids;return opts.length?`<div class="field"><label for="nm-${k}">${ic(k,'')}Vilket barn är hjälten?</label><select id="nm-${k}">${opts.map(x=>`<option ${S.names.barnet===x.name?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>`:`<div class="field" data-req="1"><label for="nm-${k}">${ic(k,'')}Vad heter barnet?</label><input type="text" id="nm-${k}" value="${esc(S.names[k]||'')}" placeholder="t.ex. Ella"></div>`}
-    if(k==='namngiven')return `<div class="field" data-req="1"><label for="nm-${k}">${ic(k,'')}Vem är det?</label><input type="text" id="nm-${k}" value="${esc(S.names[k]||'')}" placeholder="t.ex. moster Lisa eller grannen Ahmed"></div>`;
-    if(k==='egen')return `<div class="field" data-req="1"><label for="nm-${k}">${ic(k,'')}Vad heter figuren?</label><input type="text" id="nm-${k}" value="${esc(S.names[k]||'')}" placeholder="t.ex. Kapten Kanelbulle"><input type="text" id="ds-${k}" value="${esc(S.descs[k]||'')}" placeholder="Hur ser den ut och vad kan den? (valfritt)"></div>`;
+    if(k==='barnet'){const opts=listenKids().length?listenKids():S.kids;return opts.length?`<div class="field"><label for="nm-${k}">${ic(k,'')}Vilket barn är hjälten?</label><select id="nm-${k}">${opts.map(x=>`<option ${S.names.barnet===x.name?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>`:`<div class="field" data-req="1"><label for="nm-${k}">${ic(k,'')}Vad heter barnet?</label><input type="text" maxlength="40" id="nm-${k}" value="${esc(S.names[k]||'')}" placeholder="t.ex. Ella"></div>`}
+    if(k==='namngiven')return `<div class="field" data-req="1"><label for="nm-${k}">${ic(k,'')}Vem är det?</label><input type="text" maxlength="40" id="nm-${k}" value="${esc(S.names[k]||'')}" placeholder="t.ex. moster Lisa eller grannen Ahmed"></div>`;
+    if(k==='egen')return `<div class="field" data-req="1"><label for="nm-${k}">${ic(k,'')}Vad heter figuren?</label><input type="text" maxlength="40" id="nm-${k}" value="${esc(S.names[k]||'')}" placeholder="t.ex. Kapten Kanelbulle"><input type="text" id="ds-${k}" value="${esc(S.descs[k]||'')}" placeholder="Hur ser den ut och vad kan den? (valfritt)"></div>`;
     const lab=it.cat==='hjalte'?`Vad heter ${it.n}?`:it.cat==='van'?`Vad heter ${it.n}?`:`Har ${it.n} ett namn?`;
-    return `<div class="field fin"><label for="nm-${k}" title="${esc(lab)}">${ic(k,'')}</label><input type="text" id="nm-${k}" value="${esc(S.names[k]||'')}" placeholder="${esc(lab)} (valfritt)" aria-label="${esc(lab)}"></div>`;
+    return `<div class="field fin"><label for="nm-${k}" title="${esc(lab)}">${ic(k,'')}</label><input type="text" maxlength="40" id="nm-${k}" value="${esc(S.names[k]||'')}" placeholder="${esc(lab)} (valfritt)" aria-label="${esc(lab)}"></div>`;
   }).join('');
   const lenRow=()=>{const ag=ages();const opts=S.lenMode==='min'?[3,5,10,15]:[4,6,8,12,16];const cur=S.lenMode==='min'?S.lenMin:S.lenPg;const z=sizing(S.lenMode,cur,ag);return `<div class="lens">${opts.map(v=>`<button class="kc" data-len="${v}" aria-pressed="${v===cur}">${v}</button>`).join('')}</div><p class="mini">${S.lenMode==='min'?`Ungefär ${z.pages} sidor`:`Ungefär ${z.minutes} minuters högläsning`} för ${ag.length>1?'barn i åldrarna '+Math.min(...ag)+'–'+Math.max(...ag):ag[0]+'-åring'}.</p>`};
   $('#modal').innerHTML=`<div class="mback" role="dialog" aria-modal="true" aria-labelledby="fin-h"><div class="sheet">
-    <div><h2 id="fin-h">Nästan klart!</h2><p class="mini">${S.sel.map(k=>esc(I[k].label)).join(' · ')}</p></div>
+    <div><div class="kicker">Steg 2 av 2</div><h2 id="fin-h">Nästan klart!</h2><p class="mini">${S.sel.map(k=>esc(I[k].label)).join(' · ')}</p></div>
     <div class="field"><div class="row" style="justify-content:space-between"><span class="lbl" style="margin:0">Hur lång ska sagan vara?</span><div class="seg"><button data-mode="min" aria-pressed="${S.lenMode==='min'}">Minuter</button><button data-mode="sid" aria-pressed="${S.lenMode==='sid'}">Sidor</button></div></div><div id="lenBox">${lenRow()}</div></div>
     ${mobile()?`<div id="finKids">${finKidsHTML()}</div>`:''}
     ${fields?`<div class="finf"><span class="lbl" style="margin:0">Vad heter de?</span>${fields}</div>`:''}
-    <div class="field"><label for="extra">Något extra? <span class="mini">(valfritt)</span></label><input type="text" id="extra" value="${esc(S.extra)}" placeholder="t.ex. vår katt Sixten och en röd ballong"></div>
-    <div class="row" style="justify-content:space-between"><button class="btn sec" id="finBack">Tillbaka</button><button class="btn" id="finGo"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#s-magiskt"/></svg>Trolla fram sagan</button></div>
+    <div class="field"><label for="extra">Något extra? <span class="mini">(valfritt)</span></label><input type="text" maxlength="200" id="extra" value="${esc(S.extra)}" placeholder="t.ex. vår katt Sixten och en röd ballong"></div>
+    <div class="row" style="justify-content:space-between"><button class="btn sec" id="finBack">Tillbaka</button><button class="btn" id="finGo"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#s-magiskt"/></svg>Skriv sagan</button></div>
   </div></div>`;
   const m=$('#modal');
   m.onclick=e=>{
@@ -1380,6 +1391,20 @@ function finKidsHTML(){
   <div class="finrow"><span class="lbl">Med i sagan</span><div class="kidchips">${S.kids.map(k=>`<button class="kc kcav" data-instory="${k.id}" aria-pressed="${S.inStory.includes(k.id)}" style="--kc:${kidCol(k.id)}">${ic(kidKey(k.id),'')}${esc(k.name)}</button>`).join('')}</div></div>`}
 
 /* ============ story generation ============ */
+/* sagokoncept: kombineras slumpvis och undviker det som använts nyligen */
+const IDEA={
+  core:['något viktigt har försvunnit och måste hittas innan kvällen','två figurer har missförstått varandra totalt','en tävling där inget går som planerat','en lång resa för att lämna tillbaka något som inte är ens eget','någon måste våga göra något för första gången','något ska byggas klart innan tiden tar slut','en hemlighet som inte får avslöjas för tidigt','en önskan som går i uppfyllelse på helt fel sätt','två figurer byter roller för en dag','en färg har försvunnit ur världen','ett ljud har försvunnit ur världen','en inbjudan som ingen förstår','någon har tappat sin speciella förmåga','vädret har blivit konstigt och måste rättas till','en gåva som ingen vet vem den är till','en regel som plötsligt slutar gälla','en ny granne som gör allt annorlunda','ett misslyckat försök som blir något bra','något växer alldeles för fort','något har krympt och blivit pyttelitet','en vilsen figur som behöver hitta hem','ett djur som vill bli något helt annat','en fest som håller på att gå om intet','ett pussel där sista biten fattas','ett äventyr som pågår medan alla andra sover','en räddningsaktion som kräver samarbete','ett missförstått meddelande som skapar kaos','en uppfinning som gör tvärtom mot vad den ska'],
+  adj:['spegelvända','pratande','krympande','självlysande','baklänges-gående','osynliga','sömngående','sjungande','vilsna','upp-och-nervända','kittliga','blyga','glömska','jättestora','ostyriga','dansande','fnissande','sura','supersnabba','evigt hungriga'],
+  noun:['molnet','skuggan','trappan','regnbågen','skon','båten','klockan','trumman','sängen','bron','isflaket','fröet','såpbubblan','vanten','hissen','vulkanen','glassen','kompassen','knappen','tandborsten','cykeln','hängmattan','brevlådan','ballongen','mössan','paraplyet','pennan','kudden','gungan','tältet','ljusslingan','spåret','stenen','fjädern','ryggsäcken','snäckan','draken av papper','trädkojan','gatlampan','fönstret'],
+  device:['en nedräkning som håller spänningen','en ramsa som kommer tillbaka och växer för varje sida','en gåta som löses på sista sidan','brev eller lappar som skickas fram och tillbaka','en sång som får en ny vers på varje sida','en lista som bockas av','ett vad mellan två figurer','tre försök där det tredje lyckas','ett ljudord som blir sagans signatur','en överraskande förklädnad'],
+  heart:['att dela med sig','att våga säga förlåt','tålamod','att lyssna på andra','att det är bra att vara annorlunda','vänskap mellan helt olika figurer','att be om hjälp','att ta hand om naturen','att misslyckas och försöka igen','att vara snäll mot sig själv','att hålla ett löfte','att våga säga nej','nyfikenhet','att trösta någon']};
+const CLICHES='tekannor, ficklampor, magiska nycklar, skattkartor, försvunna strumpor, fallande stjärnor, talande ugglor som vet allt, magiska kakor, hemliga lösenord och glömda födelsedagar';
+function storyConcept(){
+  const used=LS.get('ideasUsed',[]);const fresh=(arr,tag)=>{const ok=arr.filter(x=>!used.includes(tag+x));return pick(ok.length?ok:arr)};
+  const c={core:fresh(IDEA.core,'c:'),thing:fresh(IDEA.adj,'a:')+' '+fresh(IDEA.noun,'n:'),device:fresh(IDEA.device,'d:'),heart:fresh(IDEA.heart,'h:')};
+  const [a,...nn]=c.thing.split(' ');LS.set('ideasUsed',[...used,'c:'+c.core,'a:'+a,'n:'+nn.join(' '),'d:'+c.device,'h:'+c.heart].slice(-60));
+  return c}
+function recentStories(){return(S.lib||[]).slice(0,10).map(s=>`"${s.title}"${s.summary?' – '+String(s.summary).slice(0,110):''}`)}
 const TWISTS=['en försvunnen strumpa','en tekanna som kan sjunga','ett hemligt lösenord','en karta ritad med krita','en mycket artig snigel','ett paraply som kan flyga','en kaka som aldrig tar slut','en nyckel utan lås','en ficklampa med eget humör','en glömd födelsedag','en vind som visslar melodier','ett gåtfullt brev','en sten som är varm som en kopp kakao','en fjäder som kittlar fram skratt','en snögubbe som vill se sommaren','ett eko som svarar fel'];
 const ENDTXT={
   lyckligt:'Avsluta lyckligt, varmt och tryggt.',
@@ -1416,7 +1441,12 @@ INGREDIENSER (alla ska märkas tydligt i sagan):
 ${ing}${implicitHero}${kidsLine}
 ${c.extra?`\nEXTRA ÖNSKEMÅL: ${c.extra}\n`:''}${seq}
 LÄNGD: exakt ${c.pages} sidor, cirka ${c.wpp} ord per sida (ungefär ${c.minutes} minuters högläsning).
-OVÄNTAD DETALJ att väva in: ${pick(TWISTS)}. Variation nr ${Math.floor(Math.random()*1e6)}: välj en oväntad vinkel och undvik den mest förutsägbara intrigen.${c.themes.includes('sagotid')?'':' Börja inte med "Det var en gång".'}
+${(()=>{const k=storyConcept(),rs=recentStories();return `SAGANS GRUNDIDÉ (ny för varje saga – bygg handlingen kring den):
+- Problem: ${k.core}
+- Något speciellt i sagan: ”den ${k.thing}” – tolka fritt och gör en egen, oväntad version
+- Berättargrepp: ${k.device}
+- Hjärtat i sagan: ${k.heart}
+UNDVIK UPPREPNINGAR: Använd inte ${CLICHES}.${rs.length?` Sagan får inte likna dessa tidigare sagor (annan intrig, andra föremål, annan titel):\n${rs.join('\n')}`:''}`})()}${c.themes.includes('sagotid')?'':' Börja inte med "Det var en gång".'}
 
 TRYGGHET: Läskigt får vara pirrigt, aldrig grymt eller blodigt. Ingen dör eller skadas på riktigt.
 SLUT: ${ENDTXT[c.ending]||ENDTXT.lyckligt}
@@ -1585,6 +1615,7 @@ function openReader(st){
   applyWall(themeKey(st.themes));show('read');
   $('#rTitle').textContent=st.title+(st.series&&st.series.ep>1?` · Del ${st.series.ep}`:'');
   renderSheet();updFav();updVoiceBtn();updLangBtn();
+  if(!LS.get('coachRead',false)){LS.set('coachRead',true);setTimeout(()=>toast('Bläddra med pilen ▶ – eller tryck Läs upp så läses sagan högt.'),700)}
 }
 const nSheets=()=>RD.st.pages.length+2;
 function sheetHTML(i){
@@ -1604,7 +1635,8 @@ function endHTML(){
   const tagUI=S.kids.length?`<div><div class="lbl">Vems favorit är den?</div><div class="kidchips">${S.kids.map(k=>`<button class="kc" data-act="tag" data-kid="${k.id}" aria-pressed="${RD.tags.includes(k.id)}" style="--kc:${kidCol(k.id)}">${esc(k.name)}</button>`).join('')}</div></div>`:'';
   const favUI=st.example?'':`<div style="display:flex;flex-direction:column;gap:12px">${tagUI}<div><button class="btn ${saved?'sec':''}" data-act="fav">${saved?'Sparad i bokhyllan ✓':'Spara som favorit'}</button></div>${saved?'<p class="mini">Sparad precis som den är. Ni kan läsa den igen från bokhyllan.</p>':''}</div>`;
   const nx=(st.next||[]).length?`<div><div class="lbl">Hur ska det fortsätta?</div><div class="nexts">${st.next.map((t,i)=>`<button data-act="next" data-i="${i}"><b>${i+1}</b>${esc(t)}</button>`).join('')}<button data-act="final"><b>★</b>Avsluta äventyret med ett lyckligt slut</button></div></div>`:'';
-  return `<div class="endp"><h2>${esc(endLine(st))}</h2>${favUI}${nx}<div class="row">${st.example?'':'<button class="btn sec" data-act="again">Ny saga med samma bilder</button>'}${st.example?'':`<button class="btn sec" data-act="own">${hasOwn(st)?'Din inspelning':'Spela in själv'}</button><button class="btn sec" data-act="rec">${st.audio?'Inspelningen':'Riktig berättarröst'}</button>`}<button class="btn sec" data-act="film">Spara som film</button><button class="btn sec" data-go="bygg">Bygg en ny saga</button></div></div>`;
+  return `<div class="endp"><h2>${esc(endLine(st))}</h2>${favUI}${nx}<div class="lbl" style="margin:0">Vad vill ni göra nu?</div><div class="row"><button class="btn sec" data-act="reread">↺ Läs igen</button><button class="btn" data-go="bygg">✨ Ny saga</button>${st.example?'':'<button class="btn sec" data-act="again">Samma bilder, ny saga</button>'}</div>
+  ${st.example?'':`<div class="row endmore"><button class="chipbtn" data-act="own">🎙 ${hasOwn(st)?'Din inspelning':'Spela in själv'}</button><button class="chipbtn" data-act="rec">🗣 ${st.audio?'Inspelningen':'Riktig berättarröst'}</button><button class="chipbtn" data-act="film">🎬 Film</button></div>`}</div>`;
 }
 function renderSheet(){const h=sheetHTML(RD.i);$('#pgL').innerHTML=h.L;$('#pgR').innerHTML=h.R;$('#pgR').scrollTop=0;fitPage();updNav()}
 function fitPage(){const r=$('#pgR'),t=r.querySelector('.txt');const c=r.firstElementChild;if(c)c.style.zoom='';
@@ -1619,7 +1651,8 @@ function updNav(){const n=nSheets();$('#rPrev').disabled=RD.i===0;$('#rNext').di
 const mobile=()=>matchMedia('(max-width:820px)').matches;
 function flip(dir){
   return new Promise(res=>{
-    const to=RD.i+dir;if(to<0||to>=nSheets()||RD.busy)return res(false);
+    if(RD.busy){RD.queued=dir;return res(false)}
+    const to=RD.i+dir;if(to<0||to>=nSheets())return res(false);
     const old={L:$('#pgL').innerHTML,R:$('#pgR').innerHTML};RD.i=to;const nw=sheetHTML(to);
     if(reduce){renderSheet();return res(true)}
     RD.busy=true;const book=$('#book'),leaf=document.createElement('div');leaf.className='leaf';
@@ -1629,18 +1662,18 @@ function flip(dir){
       book.appendChild(leaf);$('#pgL').innerHTML=nw.L;$('#pgR').innerHTML=nw.R;
       leaf.style.transformOrigin=dir>0?'left center':'right center';
       anim=leaf.animate([{transform:'rotateY(0deg)',opacity:1},{transform:`rotateY(${dir>0?-100:100}deg)`,opacity:.2}],{duration:620,easing:'cubic-bezier(.4,.1,.3,1)'});
-      anim.onfinish=()=>{leaf.remove();RD.busy=false;updNav();res(true)};
+      anim.onfinish=()=>{leaf.remove();RD.busy=false;updNav();res(true);if(RD.queued){const q=RD.queued;RD.queued=0;if(!Voice.on)flip(q)}};
     }else{
       if(dir>0){leaf.style.left='50%';leaf.style.right='12px';leaf.style.transformOrigin='left center';
         leaf.innerHTML=`<div class="face page r">${old.R}<div class="shade" style="background:linear-gradient(90deg,rgba(0,0,0,.15),transparent 30%)"></div></div><div class="face back page l">${nw.L}</div>`;
         book.appendChild(leaf);$('#pgR').innerHTML=nw.R;
         anim=leaf.animate([{transform:'rotateY(0deg)'},{transform:'rotateY(-180deg)'}],{duration:760,easing:'cubic-bezier(.45,.05,.35,1)'});
-        anim.onfinish=()=>{$('#pgL').innerHTML=nw.L;leaf.remove();RD.busy=false;updNav();res(true)};
+        anim.onfinish=()=>{$('#pgL').innerHTML=nw.L;leaf.remove();RD.busy=false;updNav();res(true);if(RD.queued){const q=RD.queued;RD.queued=0;if(!Voice.on)flip(q)}};
       }else{leaf.style.left='12px';leaf.style.right='50%';leaf.style.transformOrigin='right center';
         leaf.innerHTML=`<div class="face page l">${old.L}</div><div class="face back page r">${nw.R}</div>`;
         book.appendChild(leaf);$('#pgL').innerHTML=nw.L;
         anim=leaf.animate([{transform:'rotateY(0deg)'},{transform:'rotateY(180deg)'}],{duration:760,easing:'cubic-bezier(.45,.05,.35,1)'});
-        anim.onfinish=()=>{$('#pgR').innerHTML=nw.R;fitPage();leaf.remove();RD.busy=false;updNav();res(true)};
+        anim.onfinish=()=>{$('#pgR').innerHTML=nw.R;fitPage();leaf.remove();RD.busy=false;updNav();res(true);if(RD.queued){const q=RD.queued;RD.queued=0;if(!Voice.on)flip(q)}};
       }
     }
     $('#pgR').scrollTop=0;fitPage();updNav();
@@ -1660,6 +1693,7 @@ $('#book').addEventListener('click',e=>{
   if(a==='rec'){Voice.stop();openEL(st)}
   if(a==='own'){DBG.log('klick: Spela in själv (slutsidan)');Voice.stop();openStudio(st)}
   if(a==='again'){Voice.stop();startStory({...st.ctx,ending:undefined})}
+  if(a==='reread'){Voice.stop();RD.i=0;renderSheet();return}
   if(a==='next'||a==='final'){Voice.stop();const dir=a==='next'?st.next[+b.dataset.i]:null;
     startStory({...st.ctx,ending:dir?'cliff':'lyckligt',sequel:{sid:st.series.id,ep:(st.series.ep||1)+1,history:[...(st.series.history||[]),{title:st.title,summary:st.summary||st.pages.at(-1).text.slice(0,240)}],last:st.pages.at(-1).text,dir}})}
 });
@@ -1759,7 +1793,7 @@ $('#lisStop').onclick=()=>Voice.stop();
 $('#rRead').onclick=()=>{if(Voice.on||Rec.on){Voice.stop();return}if(hasRec(RD.st)&&LS.get('preferRec',true))return Rec.start();if(LS.get('voicePicked',false))Voice.start();else openVoices()};
 $('#rVoice').onclick=()=>{Voice.stop();openVoices()};
 $('#rLang').onclick=()=>{Voice.stop();if(RD.st.example&&!RD.st.tr){toast('Bygg en egen saga för att byta språk.');return}openLang(RD.st)};
-function updVoiceBtn(){const v=VOICES.find(x=>x.k===S.voice)||VOICES[0];$('#rVoiceL').textContent='Röst: '+v.label}
+function updVoiceBtn(){const v=VOICES.find(x=>x.k===S.voice)||VOICES[0];$('#rVoiceL').textContent=mobile()?'Röst':'Röst: '+v.label}
 function RB(on){return on?`<svg class="bi" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg><span class="blab">Stoppa</span>`:`<svg class="bi" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5q2.5 3.5 0 7M19.5 5.5q5 6.5 0 13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg><span class="blab">Läs upp</span>`}
 $('#rRead').innerHTML=RB(false);
 function voiceInfo(p){const{voice}=Voice.pick(p);return voice?`${esc(p.label)} använder telefonens röst <b>${esc(voice.name)}</b>.`:''}
@@ -1803,8 +1837,7 @@ const LT={ac:null,
   t8(){Unlock.start();setTimeout(()=>{this.t1();setTimeout(()=>this.r(8,document.getElementById('lt-1').textContent),500)},300)},
   diag(){let all=0,sv=0;try{const v=speechSynthesis.getVoices();all=v.length;sv=v.filter(x=>/^sv/i.test(x.lang)).length}catch(e){}const os=(navigator.userAgent.match(/(iPhone OS [\d_]+|iPad; CPU OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0].replace(/_/g,'.');return `Talsyntes: ${'speechSynthesis' in window?'finns':'saknas'} · röster: ${all} (svenska: ${sv}) · ${os}`}
 };
-function soundTestHTML(){const T=[[1,'Pip-ton (Web Audio)'],[2,'Melodi från ljudfil (blob)'],[3,'Melodi från ljudfil (data)'],[4,'Svensk röst'],[5,'Standardröst utan språk'],[6,'Engelsk röst'],[7,'Svensk röst med ljudlås (nytt)'],[8,'Pip-ton med ljudlås (nytt)']];
-  return `<details class="ltest"><summary>Hör du inget? Testa ljudet</summary><p class="mini">Tryck på testerna ett i taget och säg vilka nummer du hör. Hörs bara 2 och 3 står telefonen troligen på ljudlöst – prova då 7 och 8.</p><div class="ltl">${T.map(([n,l])=>`<div class="ltr"><button class="kc" data-lt="${n}">${n}. ${l}</button><span class="mini" id="lt-${n}"></span></div>`).join('')}</div><p class="mini" id="ltdiag">${esc(LT.diag())}</p></details>`}
+function soundTestHTML(){return `<details class="ltest"><summary>Hör du inget?</summary><ol class="mini sthelp"><li>Höj volymen.</li><li>På iPhone: slå av ljudlöst-knappen på sidan av telefonen.</li><li>Tryck här och lyssna: <button class="kc" data-lt="7">Testa ljudet</button> <span class="mini" id="lt-7"></span></li></ol></details>`}
 
 /* ============ film export ============ */
 const FW=1080,FH=1350,IX=60,IY=60,IW=960,IH=720;
@@ -2286,7 +2319,7 @@ function showDiag(title,detail){
     if(t.id==='dgCopy'){const txt=$('#dgLog').textContent;const done=()=>toast('Kopierat');const sel=()=>{const r=document.createRange();r.selectNodeContents($('#dgLog'));const s2=getSelection();s2.removeAllRanges();s2.addRange(r);toast('Markerat – tryck Kopiera')};try{navigator.clipboard.writeText(txt).then(done,sel)}catch(er){sel()}}};
 }
 function diagOnBoot(){const a=DBG.get();let lastBoot=-1;a.forEach((l,k)=>{if(/ start v/.test(l))lastBoot=k});const prev=a.slice(0,lastBoot);let o=-1,sh=-1,cam=-1;prev.forEach((l,k)=>{if(/studio: öppnar/.test(l))o=k;if(/studio: visas/.test(l))sh=k;if(/klick: Spela in sidan/.test(l))cam=k});
-  if(o>=0&&sh<o)setTimeout(()=>showDiag('Inspelningsstudion öppnades inte förra gången','Sidan laddades om eller stannade innan studion hann visas.'),900);}
+  if(o>=0&&sh<o&&LS.get('debug',false))setTimeout(()=>showDiag('Inspelningsstudion öppnades inte förra gången','Sidan laddades om eller stannade innan studion hann visas.'),900);}
 function stuMark(pending){if(!STU.st)return;LS.set('stuResume',{sid:STU.st.id,i:STU.i,t:Date.now(),pending})}
 function capInput(label,cls,id){const ios=isIOS();return `<span class="btn ${cls} filebtn">${label}<input type="file" id="${id}" accept="${ios?'video/*':'audio/*'}" capture="user" aria-label="${esc(label.replace(/<[^>]+>/g,''))}"></span>`}
 function renderStudio(){
@@ -2610,8 +2643,8 @@ const OPT=(id,f,cur,opts)=>`<select id="${f}-${id}" data-f="${f}">${opts.map(([v
 function renderKids(){
   applyWall('def');syncKidIcons();
   $('#kidcard').innerHTML=`<h1 style="color:var(--cover)">Barnen</h1><p class="lead">Namn och ålder sparas, så slipper ni skriva in dem varje kväll. Åldern styr hur lätt och hur läskigt sagan blir. Välj utseende, så känner barnen igen sig när de är med i sagan.</p>
-  <div style="display:flex;flex-direction:column;gap:14px">${S.kids.map(k=>`<div class="kidrow" data-id="${k.id}">${ic(kidKey(k.id),'kav')}<div class="kidf"><input type="text" id="kn-${k.id}" data-f="name" aria-label="Namn" value="${esc(k.name)}" placeholder="Namn">${OPT(k.id,'age',String(k.age),Array.from({length:12},(_,j)=>[String(j+1),(j+1)+' år']))}${OPT(k.id,'hair',k.hair||'brun',[['brun','Brunt hår'],['blond','Blont hår'],['svart','Svart hår'],['rod','Rött hår']])}${OPT(k.id,'style',k.style||'kort',[['kort','Kort hår'],['lang','Långt hår']])}${OPT(k.id,'skin',k.skin||'ljus',[['ljus','Ljus hy'],['mellan','Mellanhy'],['mork','Mörk hy']])}<button class="del" data-kdel="${k.id}">Ta bort</button></div></div>`).join('')||'<p class="mini">Inga barn tillagda ännu.</p>'}</div>
-  <div class="row"><button class="btn" id="addKid">Lägg till barn</button>${S.kids.length?'<button class="btn sec" data-go="bygg">Bygg en saga</button>':''}</div><button class="link" id="dgOpen" style="align-self:flex-start;font-size:.85rem">Felsökning</button>`;
+  <div style="display:flex;flex-direction:column;gap:14px">${S.kids.map(k=>`<div class="kidrow" data-id="${k.id}">${ic(kidKey(k.id),'kav')}<div class="kidf"><input type="text" maxlength="30" id="kn-${k.id}" data-f="name" aria-label="Namn" value="${esc(k.name)}" placeholder="Namn">${OPT(k.id,'age',String(k.age),Array.from({length:12},(_,j)=>[String(j+1),(j+1)+' år']))}${OPT(k.id,'hair',k.hair||'brun',[['brun','Brunt hår'],['blond','Blont hår'],['svart','Svart hår'],['rod','Rött hår']])}${OPT(k.id,'style',k.style||'kort',[['kort','Kort hår'],['lang','Långt hår']])}${OPT(k.id,'skin',k.skin||'ljus',[['ljus','Ljus hy'],['mellan','Mellanhy'],['mork','Mörk hy']])}<button class="del" data-kdel="${k.id}">Ta bort</button></div></div>`).join('')||'<p class="mini">Inga barn tillagda ännu.</p>'}</div>
+  <div class="row"><button class="btn" id="addKid">Lägg till barn</button>${S.kids.length?'<button class="btn sec" data-go="bygg">Bygg en saga</button>':''}</div>${LS.get('debug',false)?'<button class="link" id="dgOpen" style="align-self:flex-start;font-size:.85rem">Felsökning</button>':''}`;
 }
 $('#kidcard').addEventListener('click',e=>{
   if(e.target.id==='dgOpen'){showDiag('Felsökning');return}
