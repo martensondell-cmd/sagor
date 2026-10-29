@@ -568,6 +568,17 @@ input[type=checkbox]{width:22px;height:22px;accent-color:var(--cover)}
 .sttext.live{border-color:#d1342b;box-shadow:0 0 0 3px #ffe3e1}
 .dglog{white-space:pre-wrap;word-break:break-word;font-size:.75rem;max-height:40vh;overflow:auto;background:#fff;border:2px solid var(--edge);border-radius:10px;padding:8px;user-select:text;-webkit-user-select:text;margin:0}
 .studio{width:min(720px,100%);gap:12px}
+.kidwho{display:none}
+body.kid .kidwho{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
+.kwq{font-family:var(--f-display);font-weight:800;font-size:1.1rem;color:var(--cover)}
+.kwlist{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.kwho{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 8px 8px;min-width:78px;border:3px solid var(--ink);border-radius:22px;background:var(--paper);font-family:var(--f-display);font-weight:800;font-size:.95rem;color:var(--ink);box-shadow:0 4px 0 var(--ink);opacity:.75;cursor:pointer}
+.kwho svg{width:56px;height:56px;filter:url(#crayon)}
+.kwho.on{background:var(--kc,#ffd23f);opacity:1;transform:rotate(-2deg)}
+.kwho i{position:absolute;top:-8px;right:-8px;width:26px;height:26px;border-radius:50%;background:#7fd6b6;border:2.5px solid var(--ink);font-style:normal;font-size:.95rem;display:grid;place-items:center}
+.kwho:not(.on) i{display:none}
+.kidav svg{width:44px;height:44px;border-radius:50%;background:var(--kc);filter:url(#crayon)}
+@media (max-width:820px){.kwho svg{width:48px;height:48px}.kwho{min-width:70px}}
 .homebtn{gap:5px}.homebtn .bi{width:20px;height:20px}
 body.kid .homebtn{padding:.4em .8em}body.kid .homebtn .bi{width:24px;height:24px}
 /* större knappar där det finns plats */
@@ -919,6 +930,7 @@ a.chipbtn,a.btn{text-decoration:none;display:inline-flex;align-items:center;just
             <button class="btn sec" data-go="barnen" id="homeKids">Barnen</button>
           </div>
           <button class="link" id="readExample">Läs exempelsagan</button>
+          <div class="kidwho" id="kidWho"></div>
           <div class="kidhome"><button class="kbig" data-go="bygg"><span>✨</span>Ny saga</button><button class="kbig" data-go="hyllan"><span>📚</span>Mina sagor</button></div>
         </div></div>
       </div>
@@ -985,7 +997,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v31 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v32 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1406,7 +1418,12 @@ document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g
 addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(['bygg','hyllan','barnen'].includes(h))show(h,false)});
 
 /* ============ home ============ */
-function renderHome(){
+function renderKidWho(){const el=$('#kidWho');if(!el)return;if(!KID.on||!S.kids.length){el.innerHTML='';return}
+  if(S.kids.some(k=>!I[kidKey(k.id)]))syncKidIcons();
+  el.innerHTML=`<div class="kwq">Vem är med i sagan?</div><div class="kwlist">${S.kids.map(k=>{const on=S.inStory.includes(k.id);return `<button class="kwho ${on?'on':''}" data-who="${k.id}" aria-pressed="${on}" style="--kc:${kidCol(k.id)}">${ic(kidKey(k.id),'')}<span>${esc(k.name)}</span><i aria-hidden="true">${on?'✓':''}</i></button>`}).join('')}</div>`}
+$('#kidWho').addEventListener('click',e=>{const b=e.target.closest('[data-who]');if(!b)return;const id=b.dataset.who;
+  S.inStory=S.inStory.includes(id)?S.inStory.filter(x=>x!==id):[...S.inStory,id];S.listen=S.inStory.length?[...S.inStory]:S.kids.map(k=>k.id);renderKidWho()});
+function renderHome(){renderKidWho();
   applyWall(S.sel.length?themeKey(S.sel):'skog');
   $('#homeArt').innerHTML=scene({scene:'skog',cast:['prinsessa','uggla','drake'],time:'dag',action:'glad'});
   $('#homeLib').textContent=`Bokhyllan (${S.lib.length})`;
@@ -1533,10 +1550,10 @@ function openFinish(){
   if(!mobile())setTimeout(()=>$('#finGo')?.focus(),50);
 }
 function openFinishKid(){
-  if(S.kids.length&&!S.listen.length)S.listen=S.kids.map(k=>k.id);
+  if(S.kids.length&&!S.listen.length)S.listen=S.inStory.length?[...S.inStory]:S.kids.map(k=>k.id);
   const L=[[3,'🐢','Kort'],[5,'🐇','Lagom'],[10,'🐘','Lång']];const cur=S.lenMode==='min'&&[3,5,10].includes(S.lenMin)?S.lenMin:5;
   $('#modal').innerHTML=`<div class="mback" role="dialog" aria-modal="true" aria-label="Hur lång saga?"><div class="sheet kidfin">
-    <div class="kidsel">${S.sel.map(k=>ic(k,'')).join('')}</div>
+    <div class="kidsel">${S.inStory.map(id=>S.kids.find(k=>k.id===id)).filter(Boolean).map(k=>`<span class="kidav" style="--kc:${kidCol(k.id)}">${ic(kidKey(k.id),'')}</span>`).join('')}${S.sel.map(k=>ic(k,'')).join('')}</div>
     <h2>Hur lång saga?</h2>
     <div class="klen">${L.map(([v,e,t])=>`<button class="kbig ${v===cur?'on':''}" data-klen="${v}" aria-pressed="${v===cur}"><span>${e}</span>${t}</button>`).join('')}</div>
     <div class="row" style="justify-content:space-between"><button class="kbig ksmall" id="kBack" aria-label="Tillbaka"><span>⬅️</span></button><button class="kbig kgo" id="kGo"><span>✨</span>Skriv sagan!</button></div></div></div>`;
