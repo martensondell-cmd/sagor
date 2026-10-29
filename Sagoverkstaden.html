@@ -529,6 +529,33 @@ input[type=checkbox]{width:22px;height:22px;accent-color:var(--cover)}
 .sttext.live{border-color:#d1342b;box-shadow:0 0 0 3px #ffe3e1}
 .dglog{white-space:pre-wrap;word-break:break-word;font-size:.75rem;max-height:40vh;overflow:auto;background:#fff;border:2px solid var(--edge);border-radius:10px;padding:8px;user-select:text;-webkit-user-select:text;margin:0}
 .studio{width:min(720px,100%);gap:12px}
+/* ===== barnläge ===== */
+.kidhome,.remo{display:none}
+.modebtn{white-space:nowrap}
+body.kid .nav [data-go="barnen"],body.kid #aiBtn{display:none}
+body.kid .home .kicker,body.kid .home .steps3,body.kid .home .lead,body.kid .home .actions,body.kid #readExample{display:none}
+body.kid .kidhome{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;width:100%}
+.kbig{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:110px;min-height:104px;padding:10px 14px;border:3.5px solid var(--ink);border-radius:26px;background:var(--pick);color:var(--ink);font-family:var(--f-display);font-weight:800;font-size:1.15rem;box-shadow:0 5px 0 var(--ink);cursor:pointer}
+.kbig span{font-size:2.6rem;line-height:1}.kbig:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.kbig.on{background:#7fd6b6}.kbig.ksmall{min-width:72px;min-height:72px;background:var(--paper)}.kbig.ksmall span{font-size:2rem}
+.kbig.kgo{flex:1;flex-direction:row;font-size:1.3rem;min-height:72px}.kbig.kgo span{font-size:2rem}
+body.kid .remo{display:block;font-size:1.5rem;line-height:1}
+body.kid .rib{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 10px 14px}
+body.kid .rib .rtx{font-size:.72rem}
+body.kid .qhead .qnext{font-size:1rem;padding:.4em 1em}
+body.kid #tiles .tile .tl{font-size:.8em}
+body.kid .tray .btn{font-size:1.2rem;padding:.55em 1.2em}
+.kidfin{text-align:center;align-items:stretch}.kidsel{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}.kidsel svg{width:44px;height:44px;filter:url(#crayon)}
+.klen{display:flex;gap:10px;justify-content:center}.klen .kbig{flex:1;min-width:0}
+body.kid #rVoice,body.kid #rLang,body.kid #rRec,body.kid #rFilm{display:none}
+body.kid .rbar .chipbtn.ib{padding:.5em .9em}body.kid .rbar .bi{width:28px;height:28px}
+body.kid #rRead{background:#ffd23f}
+body.kid .rnav .round{width:64px;height:64px}body.kid .rnav .round svg{width:32px;height:32px}
+.kidend h2{text-align:center}.kidend-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.kidend-btns .kbig{flex:1;min-width:90px;min-height:92px}
+body.kid .bkmeta .del,body.kid #filters{display:none}
+.gatebtn{position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;min-width:200px}
+.gatebtn .gfill{position:absolute;inset:0;width:0;background:#7fd6b6}.gatebtn.hold .gfill{width:100%;transition:width 3s linear}
+@media (max-width:820px){body.kid .rbar{justify-content:space-between}body.kid .rbar .blab{font-size:.7rem;max-width:none}.kbig{min-height:88px;min-width:96px}.kbig span{font-size:2.2rem}}
 .steps3{list-style:none;margin:0;padding:0;display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
 .steps3 li{display:flex;align-items:center;gap:5px;white-space:nowrap;font-family:var(--f-display);font-weight:700;font-size:.9rem;background:var(--pick-soft);border-radius:99px;padding:.25em .7em .25em .3em}
 .steps3 b{display:inline-grid;place-items:center;width:1.5em;height:1.5em;border-radius:50%;background:var(--pick);border:2px solid var(--ink);font-size:.8rem}
@@ -808,6 +835,7 @@ a.chipbtn,a.btn{text-decoration:none;display:inline-flex;align-items:center;just
       <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#s-sagotid"/></svg>Sagoverkstaden
     </button>
     <nav class="nav" aria-label="Huvudmeny">
+      <button class="chipbtn modebtn" id="modeBtn" aria-label="Byt mellan barn- och vuxenläge"></button>
       <button class="chipbtn" id="aiBtn" hidden aria-label="AI-inställningar">⚙</button>
       <button class="chipbtn" data-go="bygg">Ny saga</button>
       <button class="chipbtn" data-go="hyllan">Bokhyllan</button>
@@ -830,6 +858,7 @@ a.chipbtn,a.btn{text-decoration:none;display:inline-flex;align-items:center;just
             <button class="btn sec" data-go="barnen" id="homeKids">Barnen</button>
           </div>
           <button class="link" id="readExample">Läs exempelsagan</button>
+          <div class="kidhome"><button class="kbig" data-go="bygg"><span>✨</span>Ny saga</button><button class="kbig" data-go="hyllan"><span>📚</span>Mina sagor</button></div>
         </div></div>
       </div>
     </section>
@@ -895,7 +924,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v27 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v28 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1075,6 +1104,7 @@ const CATS=[
   {id:'stamning',rib:'Känsla',q:'Hur ska det kännas?',long:'Stämning',c:'#f9c6e4'},
   {id:'slut',rib:'Slutet',q:'Hur slutar det?',long:'Slut',c:'#c9ece6'},
 ];
+const CAT_EMO={tid:'🕰️',plats:'🌳',varld:'🌍',hjalte:'🦸',van:'🐶',laskig:'👻',stamning:'💖',slut:'🌙'};
 const catKeys=id=>Object.keys(I).filter(k=>I[k].cat===id);
 
 /* sprite */
@@ -1323,7 +1353,7 @@ $('#readExample').onclick=()=>openReader(EXAMPLE);
 function renderBuild(){
   applyWall(themeKey(S.sel));if(S.kids.some(k=>!I[kidKey(k.id)]))syncKidIcons();
   const rb=$('#ribbons');
-  rb.innerHTML=CATS.map(c=>{const n=S.sel.filter(k=>I[k].cat===c.id).length;return `<button class="rib" role="tab" aria-selected="${S.cat===c.id}" data-cat="${c.id}" style="background:${c.c}">${c.rib}${n?`<span class="n">${n}</span>`:''}</button>`}).join('');
+  rb.innerHTML=CATS.map(c=>{const n=S.sel.filter(k=>I[k].cat===c.id).length;return `<button class="rib" role="tab" aria-selected="${S.cat===c.id}" data-cat="${c.id}" style="background:${c.c}"><span class="remo" aria-hidden="true">${CAT_EMO[c.id]||''}</span><span class="rtx">${c.rib}</span>${n?`<span class="n">${n}</span>`:''}</button>`}).join('');
   const cat=CATS.find(c=>c.id===S.cat);
   $('#qtitle').textContent=cat.q;$('#qhint').textContent='Tryck på en bild';
   const ci=CATS.indexOf(cat),nx=CATS[(ci+1)%CATS.length];const qn=$('#qnext');qn.textContent=ci<CATS.length-1?`${nx.rib} →`:'Till början ↺';qn.dataset.cat=nx.id;
@@ -1370,6 +1400,22 @@ $('#recipe').addEventListener('click',e=>{
 $('#recipe').addEventListener('change',e=>{if(e.target.id==='ageSel')S.age=+e.target.value});
 $('#tray').addEventListener('click',e=>{if(e.target.id==='doneBtn2'){openFinish();return}const rm=e.target.closest('[data-rm]');if(rm)toggleSel(rm.dataset.rm)});
 
+/* ============ barnläge / vuxenläge ============ */
+const KID={on:LS.get('kidMode',false),
+  set(on){this.on=on;LS.set('kidMode',on);document.body.classList.toggle('kid',on);this.btn();
+    if(on){Voice.stop();$('#modal').innerHTML='';if(['barnen'].includes(S.view))show('home')}
+    if(S.view==='bygg')renderBuild();if(S.view==='read')renderSheet();if(S.view==='hyllan')renderLib();if(S.view==='home')renderHome()},
+  btn(){const b=$('#modeBtn');if(b){b.innerHTML=this.on?'🔒 Vuxen':'🧒 Barnläge';b.title=this.on?'Håll inne för att gå till vuxenläge':'Byt till barnläge'}},
+  gate(){$('#modal').innerHTML=`<div class="mback" role="dialog" aria-modal="true" aria-labelledby="gth"><div class="sheet" style="width:min(380px,100%);text-align:center;align-items:center">
+    <h2 id="gth">För vuxna</h2><p class="mini">Håll inne knappen i 3 sekunder för att gå till vuxenläge.</p>
+    <button class="btn gatebtn" id="gateHold"><span class="gfill"></span><span style="position:relative">Håll inne</span></button><button class="chipbtn" id="gateNo">Stäng</button></div></div>`;
+    const m=$('#modal'),h=$('#gateHold');let t=null;
+    const down=e=>{e.preventDefault();h.classList.add('hold');t=setTimeout(()=>{m.innerHTML='';KID.set(false);toast('Vuxenläge')},3000)};const up=()=>{clearTimeout(t);h.classList.remove('hold')};
+    h.addEventListener('pointerdown',down);['pointerup','pointerleave','pointercancel'].forEach(ev=>h.addEventListener(ev,up));h.addEventListener('contextmenu',e=>e.preventDefault());
+    m.onclick=e=>{if(e.target.id==='gateNo'||e.target.classList.contains('mback'))m.innerHTML=''};m.onchange=null}};
+$('#modeBtn').onclick=()=>{if(KID.on)KID.gate();else{KID.set(true);toast('Barnläge 🧒')}};
+document.body.classList.toggle('kid',KID.on);KID.btn();
+
 /* ============ namn: rätta stora och små bokstäver ============ */
 function nameCase(v){v=String(v||'').replace(/\s+/g,' ').trim();if(!v)return v;
   return v.split(' ').map(w=>w.split('-').map(p=>{if(!p)return p;if(p===p.toLowerCase()||(p===p.toUpperCase()&&p.length>1))return p.charAt(0).toLocaleUpperCase('sv')+p.slice(1).toLocaleLowerCase('sv');return p}).join('-')).join(' ')}
@@ -1381,6 +1427,7 @@ function ages(){const l=listenKids();return l.length?l.map(k=>+k.age):[S.age]}
 function sizing(mode,val,ag){const y=Math.min(...ag);const w0=y<=3?40:y<=5?65:y<=7?90:115;if(mode==='sid')return{pages:val,wpp:w0,minutes:Math.max(1,Math.round(val*w0/100))};const words=val*100;const pages=Math.max(3,Math.min(20,Math.round(words/w0)));return{pages,wpp:Math.round(words/pages),minutes:val}}
 function openFinish(){
   if(S.sel.length<3)return;
+  if(KID.on)return openFinishKid();
   if(S.kids.length&&!S.listen.length)S.listen=S.kids.map(k=>k.id);
   const fields=S.sel.filter(NEEDS).map(k=>{
     const it=I[k];
@@ -1419,6 +1466,21 @@ function openFinish(){
   };
   m.onchange=e=>{if(e.target.id==='ageSel2'){S.age=+e.target.value;$('#lenBox').innerHTML=lenRow()}};
   if(!mobile())setTimeout(()=>$('#finGo')?.focus(),50);
+}
+function openFinishKid(){
+  if(S.kids.length&&!S.listen.length)S.listen=S.kids.map(k=>k.id);
+  const L=[[3,'🐢','Kort'],[5,'🐇','Lagom'],[10,'🐘','Lång']];const cur=S.lenMode==='min'&&[3,5,10].includes(S.lenMin)?S.lenMin:5;
+  $('#modal').innerHTML=`<div class="mback" role="dialog" aria-modal="true" aria-label="Hur lång saga?"><div class="sheet kidfin">
+    <div class="kidsel">${S.sel.map(k=>ic(k,'')).join('')}</div>
+    <h2>Hur lång saga?</h2>
+    <div class="klen">${L.map(([v,e,t])=>`<button class="kbig ${v===cur?'on':''}" data-klen="${v}" aria-pressed="${v===cur}"><span>${e}</span>${t}</button>`).join('')}</div>
+    <div class="row" style="justify-content:space-between"><button class="kbig ksmall" id="kBack" aria-label="Tillbaka"><span>⬅️</span></button><button class="kbig kgo" id="kGo"><span>✨</span>Skriv sagan!</button></div></div></div>`;
+  const m=$('#modal');m.onchange=null;
+  m.onclick=e=>{const t=e.target.closest('button');if(e.target.classList.contains('mback')||(t&&t.id==='kBack')){m.innerHTML='';return}if(!t)return;
+    if(t.dataset.klen){S.lenMode='min';S.lenMin=+t.dataset.klen;m.querySelectorAll('[data-klen]').forEach(b=>{b.classList.toggle('on',b===t);b.setAttribute('aria-pressed',b===t)});return}
+    if(t.id==='kGo'){m.innerHTML='';const z=sizing('min',S.lenMin||5,ages());const names={};S.sel.filter(NEEDS).forEach(k=>{if(S.names[k])names[k]=S.names[k]});
+      if(S.sel.includes('namngiven')&&!names.namngiven)names.namngiven='en snäll granne';if(S.sel.includes('egen')&&!names.egen)names.egen='Kompisen';
+      startStory({kidChars:S.inStory.map(id=>S.kids.find(k=>k.id===id)).filter(Boolean).map(kidChar),themes:[...S.sel],names,descs:{},extra:'',kidIds:listenKids().map(k=>k.id),kids:listenKids().map(k=>({name:k.name,age:+k.age})),ages:ages(),...z})}};
 }
 function finKidsHTML(){
   if(!S.kids.length)return `<div class="row" style="gap:8px"><span class="lbl" style="margin:0">Lyssnarens ålder</span><select id="ageSel2">${Array.from({length:12},(_,i)=>`<option ${S.age===i+1?'selected':''}>${i+1}</option>`).join('')}</select></div>`;
@@ -1679,6 +1741,9 @@ function kidLine(st){const ks=(st.kidIds||[]).map(id=>S.kids.find(k=>k.id===id)?
 const ill=svg=>`<div class="ill"><div class="frame">${svg}</div></div>`;
 function endHTML(){
   const st=RD.st,saved=isSaved(st);
+  if(KID.on)return `<div class="endp kidend"><h2>${esc(endLine(st))}</h2>
+    ${(st.next||[]).length?`<div class="nexts">${st.next.map((t,i)=>`<button data-act="next" data-i="${i}"><b>${i+1}</b>${esc(t)}</button>`).join('')}</div>`:''}
+    <div class="kidend-btns"><button class="kbig" data-act="reread"><span>🔁</span>Igen</button>${st.example?'':`<button class="kbig ${saved?'on':''}" data-act="fav"><span>${saved?'💖':'🤍'}</span>${saved?'Sparad':'Spara'}</button>`}<button class="kbig" data-go="bygg"><span>✨</span>Ny saga</button></div></div>`;
   const tagUI=S.kids.length?`<div><div class="lbl">Vems favorit är den?</div><div class="kidchips">${S.kids.map(k=>`<button class="kc" data-act="tag" data-kid="${k.id}" aria-pressed="${RD.tags.includes(k.id)}" style="--kc:${kidCol(k.id)}">${esc(k.name)}</button>`).join('')}</div></div>`:'';
   const favUI=st.example?'':`<div style="display:flex;flex-direction:column;gap:12px">${tagUI}<div><button class="btn ${saved?'sec':''}" data-act="fav">${saved?'Sparad i bokhyllan ✓':'Spara som favorit'}</button></div>${saved?'<p class="mini">Sparad precis som den är. Ni kan läsa den igen från bokhyllan.</p>':''}</div>`;
   const nx=(st.next||[]).length?`<div><div class="lbl">Hur ska det fortsätta?</div><div class="nexts">${st.next.map((t,i)=>`<button data-act="next" data-i="${i}"><b>${i+1}</b>${esc(t)}</button>`).join('')}<button data-act="final"><b>★</b>Avsluta äventyret med ett lyckligt slut</button></div></div>`:'';
