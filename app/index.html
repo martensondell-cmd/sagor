@@ -998,7 +998,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v35 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v36 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1759,7 +1759,7 @@ function offlineStory(c){
     oppet:`Och den ${K.thing}? Den försvann lika plötsligt som den kom. Vart tror du att den tog vägen?`}[c.ending]||`Snipp, snapp, snut – så var sagan slut.`;
   const endAct={godnatt:'sova',laskigtslut:'radd',cliff:'radd'}[c.ending]||'glad';
   let out=pages;out.forEach((p,i)=>{p.scene=sc[Math.min(sc.length-1,Math.floor(i*sc.length/out.length))]});PR=0;out.push(pg(endB,all,endAct,['godnatt','laskigtslut'].includes(c.ending)?'natt':'dag'));
-  return mkStory(c,{offline:true,title:pick([`${cap(H)} och den ${K.thing}`,`${cap(H)}${V.length?' och '+V[0]:''} – ett äventyr`,`Den ${K.thing}`,`${cap(H)} och ${K.heart.replace(/^att /,'konsten att ')}`]),dedication:c.kids.length?`Till ${c.kids.map(k=>k.name).join(' och ')}.`:'',pages:out,summary:`${cap(H)} löste ett problem: ${K.core}.`,next:c.ending==='cliff'?['Den '+K.thing+' visar vägen till något nytt','Någon behöver hjälp långt bort','En hemlig dörr öppnar sig']:[]});
+  return mkStory(c,{offline:true,title:pick([`${cap(H)} och den ${K.thing}`,`${cap(H)}${V.length?' och '+V[0]:''} – ett äventyr`,`Den ${K.thing}`,...(/^att [a-zåäö]+ /.test(K.heart)&&!/^att det /.test(K.heart)?[`${cap(H)} och konsten ${K.heart}`]:[])]),dedication:c.kids.length?`Till ${c.kids.map(k=>k.name).join(' och ')}.`:'',pages:out,summary:`${cap(H)} löste ett problem: ${K.core}.`,next:c.ending==='cliff'?['Den '+K.thing+' visar vägen till något nytt','Någon behöver hjälp långt bort','En hemlig dörr öppnar sig']:[]});
 }
 
 let GEN={ctl:null,timer:null};
@@ -2071,6 +2071,16 @@ $('#lisStop').onclick=()=>Voice.stop();
 $('#rRead').onclick=()=>{$('#rRead').classList.remove('pulse');if(Voice.on||Rec.on){Voice.stop();return}autoRead()};
 function autoRead(){if(!RD.st||S.view!=='read')return;if(hasOwn(RD.st)||(RD.st.audio&&LS.get('preferRec',true)))return Rec.start();Voice.start();
   const g=Voice.gen;setTimeout(()=>{if(Voice.on&&Voice.gen===g&&!Voice.heard){Voice.stop();needTap()}},2600)}
+/* iPhone släpper bara fram ljud som startas av ett tryck. Vi "låser upp" tal och ljudspelare
+   vid varje tryck, så att uppläsningen sedan kan starta av sig själv när sagan öppnas. */
+let PRIMED=0;
+function primeAudio(){const now=Date.now();if(now-PRIMED<20000)return;PRIMED=now;
+  try{Unlock.start();setTimeout(()=>{if(!Voice.on&&!Rec.on)Unlock.stop()},900)}catch(e){}
+  try{if('speechSynthesis' in window&&!Voice.on&&!speechSynthesis.speaking){const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;const sv=Voice.list[0];if(sv){u.voice=sv;u.lang=sv.lang}speechSynthesis.speak(u)}}catch(e){}
+  try{if(!Rec.on){Rec.a=Rec.a||new Audio();const a=Rec.a;a.setAttribute('playsinline','');if(!a.src||a.src.startsWith('data:')){a.src=silentWavURL();a.muted=true;const p=a.play();if(p&&p.then)p.then(()=>{a.pause();a.muted=false}).catch(()=>{a.muted=false})}}}catch(e){}
+  try{Keep.v||Keep.start().then(()=>{if(!Voice.on&&!Rec.on)Keep.stop()})}catch(e){}}
+document.addEventListener('pointerdown',e=>{if(e.target.closest('button,a,.tile,.bk,[data-open],[role="button"]'))primeAudio()},true);
+document.addEventListener('touchend',e=>{if(e.target.closest('button,a,.tile,.bk,[data-open],[role="button"]'))primeAudio()},{capture:true,passive:true});
 function needTap(){const b=$('#rRead');if(b)b.classList.add('pulse');toast('Tryck på Läs upp så börjar sagan läsas.')}
 $('#rVoice').onclick=()=>{Voice.stop();openVoices()};
 $('#rLang').onclick=()=>{Voice.stop();if(RD.st.example&&!RD.st.tr){toast('Bygg en egen saga för att byta språk.');return}openLang(RD.st)};
