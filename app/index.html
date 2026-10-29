@@ -998,7 +998,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v36 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v37 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1590,7 +1590,7 @@ function openFinish(){
     const is2=e.target.closest('[data-instory]');if(is2){const id=is2.dataset.instory;S.inStory=S.inStory.includes(id)?S.inStory.filter(x=>x!==id):[...S.inStory,id];$('#finKids').innerHTML=finKidsHTML();return}
     const md=e.target.closest('[data-mode]');if(md){S.lenMode=md.dataset.mode;m.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b===md));$('#lenBox').innerHTML=lenRow();return}
     const ln=e.target.closest('[data-len]');if(ln){if(S.lenMode==='min')S.lenMin=+ln.dataset.len;else S.lenPg=+ln.dataset.len;$('#lenBox').innerHTML=lenRow();return}
-    if(e.target.closest('#finGo')){
+    if(e.target.closest('#finGo')){sayHello();
       let bad=null;
       S.sel.filter(NEEDS).forEach(k=>{const el=$('#nm-'+k);if(!el)return;const v=el.tagName==='SELECT'?el.value.trim():nameCase(el.value);el.value=v;S.names[k]=v;const ds=$('#ds-'+k);if(ds)S.descs[k]=ds.value.trim();const f=el.closest('.field');f.classList.toggle('err',!!f.dataset.req&&!v);if(f.dataset.req&&!v&&!bad)bad=el});
       if(bad){bad.focus();toast('Skriv ett namn i det röda fältet.');return}
@@ -1615,7 +1615,7 @@ function openFinishKid(){
   const m=$('#modal');m.onchange=null;
   m.onclick=e=>{const t=e.target.closest('button');if(e.target.classList.contains('mback')||(t&&t.id==='kBack')){m.innerHTML='';return}if(!t)return;
     if(t.dataset.klen){S.lenMode='min';S.lenMin=+t.dataset.klen;m.querySelectorAll('[data-klen]').forEach(b=>{b.classList.toggle('on',b===t);b.setAttribute('aria-pressed',b===t)});return}
-    if(t.id==='kGo'){m.innerHTML='';const z=sizing('min',S.lenMin||5,ages());const names={};S.sel.filter(NEEDS).forEach(k=>{if(S.names[k])names[k]=S.names[k]});
+    if(t.id==='kGo'){sayHello();m.innerHTML='';const z=sizing('min',S.lenMin||5,ages());const names={};S.sel.filter(NEEDS).forEach(k=>{if(S.names[k])names[k]=S.names[k]});
       if(S.sel.includes('namngiven')&&!names.namngiven)names.namngiven='en snäll granne';if(S.sel.includes('egen')&&!names.egen)names.egen='Kompisen';
       startStory({kidChars:S.inStory.map(id=>S.kids.find(k=>k.id===id)).filter(Boolean).map(kidChar),themes:[...S.sel],names,descs:{},extra:'',kidIds:listenKids().map(k=>k.id),kids:listenKids().map(k=>({name:k.name,age:+k.age})),ages:ages(),...z})}};
 }
@@ -1970,9 +1970,9 @@ $('#book').addEventListener('click',e=>{
   if(a==='film'){Voice.stop();openFilm()}
   if(a==='rec'){Voice.stop();openEL(st)}
   if(a==='own'){DBG.log('klick: Spela in själv (slutsidan)');Voice.stop();openStudio(st)}
-  if(a==='again'){Voice.stop();startStory({...st.ctx,ending:undefined})}
+  if(a==='again'){Voice.stop();sayHello();startStory({...st.ctx,ending:undefined})}
   if(a==='reread'){Voice.stop();RD.i=0;renderSheet();return}
-  if(a==='next'||a==='final'){Voice.stop();const dir=a==='next'?st.next[+b.dataset.i]:null;
+  if(a==='next'||a==='final'){Voice.stop();sayHello();const dir=a==='next'?st.next[+b.dataset.i]:null;
     startStory({...st.ctx,ending:dir?'cliff':'lyckligt',sequel:{sid:st.series.id,ep:(st.series.ep||1)+1,history:[...(st.series.history||[]),{title:st.title,summary:st.summary||st.pages.at(-1).text.slice(0,240)}],last:st.pages.at(-1).text,dir}})}
 });
 function saveFav(on){
@@ -2068,19 +2068,16 @@ const Voice={on:false,ok:'speechSynthesis' in window,all:[],get list(){const re=
 };
 Voice.load();
 $('#lisStop').onclick=()=>Voice.stop();
-$('#rRead').onclick=()=>{$('#rRead').classList.remove('pulse');if(Voice.on||Rec.on){Voice.stop();return}autoRead()};
+$('#rRead').onclick=()=>{$('#rRead').classList.remove('pulse');if(Voice.on||Rec.on){Voice.stop();return}
+  try{if('speechSynthesis' in window&&(speechSynthesis.speaking||speechSynthesis.pending)){speechSynthesis.cancel();setTimeout(autoRead,300);return}}catch(e){}
+  autoRead()};
 function autoRead(){if(!RD.st||S.view!=='read')return;if(hasOwn(RD.st)||(RD.st.audio&&LS.get('preferRec',true)))return Rec.start();Voice.start();
   const g=Voice.gen;setTimeout(()=>{if(Voice.on&&Voice.gen===g&&!Voice.heard){Voice.stop();needTap()}},2600)}
-/* iPhone släpper bara fram ljud som startas av ett tryck. Vi "låser upp" tal och ljudspelare
-   vid varje tryck, så att uppläsningen sedan kan starta av sig själv när sagan öppnas. */
-let PRIMED=0;
-function primeAudio(){const now=Date.now();if(now-PRIMED<20000)return;PRIMED=now;
-  try{Unlock.start();setTimeout(()=>{if(!Voice.on&&!Rec.on)Unlock.stop()},900)}catch(e){}
-  try{if('speechSynthesis' in window&&!Voice.on&&!speechSynthesis.speaking){const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;const sv=Voice.list[0];if(sv){u.voice=sv;u.lang=sv.lang}speechSynthesis.speak(u)}}catch(e){}
-  try{if(!Rec.on){Rec.a=Rec.a||new Audio();const a=Rec.a;a.setAttribute('playsinline','');if(!a.src||a.src.startsWith('data:')){a.src=silentWavURL();a.muted=true;const p=a.play();if(p&&p.then)p.then(()=>{a.pause();a.muted=false}).catch(()=>{a.muted=false})}}}catch(e){}
-  try{Keep.v||Keep.start().then(()=>{if(!Voice.on&&!Rec.on)Keep.stop()})}catch(e){}}
-document.addEventListener('pointerdown',e=>{if(e.target.closest('button,a,.tile,.bk,[data-open],[role="button"]'))primeAudio()},true);
-document.addEventListener('touchend',e=>{if(e.target.closest('button,a,.tile,.bk,[data-open],[role="button"]'))primeAudio()},{capture:true,passive:true});
+/* När en ny saga ska skrivas säger rösten något direkt i trycket. Då har iPhone fått ett riktigt
+   tal startat av användaren, och uppläsningen får sedan starta av sig själv när sagan är klar. */
+function sayHello(){try{if(!('speechSynthesis' in window)||Voice.on||!LS.get('autoRead',true)||curLangOK()===false)return;
+  Unlock.start();const v=VOICES.find(x=>x.k===S.voice)||VOICES[0];const u=Voice.utter(pick(['Nu hittar jag på en saga åt dig!','Vänta lite, nu skrivs sagan!','Spännande! Nu börjar jag skriva.']),v);Voice.say(u)}catch(e){}}
+function curLangOK(){return true}
 function needTap(){const b=$('#rRead');if(b)b.classList.add('pulse');toast('Tryck på Läs upp så börjar sagan läsas.')}
 $('#rVoice').onclick=()=>{Voice.stop();openVoices()};
 $('#rLang').onclick=()=>{Voice.stop();if(RD.st.example&&!RD.st.tr){toast('Bygg en egen saga för att byta språk.');return}openLang(RD.st)};
