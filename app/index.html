@@ -923,7 +923,7 @@ a.chipbtn,a.btn{text-decoration:none;display:inline-flex;align-items:center;just
           <div class="kicker">Kvällens saga</div>
           <h1>Välj bilder. Få en saga.</h1>
           <ol class="steps3"><li><b>1</b>Välj bilder</li><li><b>2</b>Längd och namn</li><li><b>3</b>Läs sagan</li></ol>
-          <p class="lead">Välj 3–10 bilder – när, var, vem som är modig och vem som är läskig – så skrivs en helt ny saga.</p>
+          <p class="lead">Välj 3–20 bilder – när, var, vem som är modig och vem som är läskig – så skrivs en helt ny saga.</p>
           <div class="actions">
             <button class="btn" data-go="bygg"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#s-magiskt"/></svg>Bygg en ny saga</button>
             <button class="btn sec" data-go="hyllan" id="homeLib">Bokhyllan</button>
@@ -997,7 +997,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v32 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v34 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1166,6 +1166,49 @@ D('v-flicka','x','Ung flicka',{},person({body:Pk,hair:O,longHair:1,extra:`<circl
 D('v-pojke','x','Ung pojke',{},person({body:B,hair:Hy,extra:`<path d="M37 62 H63 M36 72 H64" stroke="#fff" stroke-width="4"/>`}));
 D('v-gubbe','x','Gammal gubbe',{},person({body:Br,hair:'#dcdce4',face:`${E(45,33)}${E(55,33)}<path d="M36 36 q2 18 14 18 q12 0 14-18 q-4 6-14 7 q-10-1-14-7Z" fill="#eeeef2"/><path d="M43 30 h4 M53 30 h4"/>`,extra:`<path d="M72 72 V92" stroke="#7a4a26" stroke-width="4"/>`}));
 D('v-gumma','x','Gammal gumma',{},I.mormor.svg);
+/* ===== fler bilder att bygga sagor av ===== */
+D('host','tid','Höstdag',{t:'En blåsig höstdag, när löven dansade,'},`<path d="M50 14 q30 14 22 46 q-8 24-22 28 q-14-4-22-28 q-8-32 22-46Z" fill="${O}"/><path d="M50 18 V88 M50 40 l14-10 M50 54 l-14-10 M50 66 l12-8"/><path d="M14 30 q8-6 14 2 q-6 8-14-2Z" fill="${R}"/><path d="M80 76 q8-6 14 2 q-6 8-14-2Z" fill="${Y}"/>`);
+D('varen','tid','Våren',{t:'En solig vårdag, när allt började växa,'},`<path d="M50 90 V48" stroke="#4c9a50" stroke-width="5"/><path d="M50 66 q-18-2-20-16 q16 0 20 16Z M50 60 q16-4 20-18 q-16 0-20 18Z" fill="#6cbf5f"/><circle cx="50" cy="34" r="8" fill="${Y}"/><circle cx="50" cy="20" r="8" fill="${Pk}"/><circle cx="64" cy="32" r="8" fill="${Pk}"/><circle cx="36" cy="32" r="8" fill="${Pk}"/><circle cx="58" cy="44" r="8" fill="${Pk}"/><circle cx="42" cy="44" r="8" fill="${Pk}"/><circle cx="50" cy="34" r="7" fill="${Y}"/>`);
+D('pask','tid','Påsk',{t:'På påskafton, när äggen gömdes,'},`<ellipse cx="50" cy="56" rx="26" ry="32" fill="#bfe3ff"/><path d="M26 50 q8-8 12 0 q4-8 12 0 q4-8 12 0 q4-8 12 0" stroke="${R}" stroke-width="4"/><path d="M26 66 h48" stroke="${Y}" stroke-width="6"/>${star(50,40,5,Y)}<path d="M70 16 q8 4 4 14 M76 14 q8 2 6 12" stroke="${Y}"/>`);
+D('fodelsedag','tid','Födelsedag',{t:'På den allra bästa födelsedagen'},`<path d="M20 52 h60 v36 H20Z" fill="${Pk}"/><path d="M20 64 q10 8 20 0 q10 8 20 0 q10 8 20 0" stroke="#fff" stroke-width="4"/><path d="M38 52 V36 M50 52 V32 M62 52 V36" stroke-width="5" stroke="${B}"/><path d="M38 30 q-4-6 0-10 q4 4 0 10Z M50 26 q-4-6 0-10 q4 4 0 10Z M62 30 q-4-6 0-10 q4 4 0 10Z" fill="${O}"/>`);
+D('fullmane','tid','Fullmånenatt',{t:'En natt med fullmåne, när allt var silvrigt,'},`<rect x="4" y="4" width="92" height="92" rx="18" fill="#2a2f66"/><circle cx="56" cy="44" r="26" fill="#fff4c2"/><circle cx="48" cy="38" r="5" fill="#ece0a8" stroke="none"/><circle cx="62" cy="52" r="7" fill="#ece0a8" stroke="none"/>${star(20,24,5,Y)}${star(24,74,4,Y)}${star(84,82,4,Y)}`);
+D('fyr','plats','Fyren',{in:'vid den gamla fyren på klippan'},`<path d="M14 90 q20-14 36-10 q20 4 36 10Z" fill="#9b8f86"/><path d="M38 80 L42 30 H58 L62 80Z" fill="#fff"/><path d="M40 66 h20 M41 48 h18" stroke="${R}" stroke-width="7"/><path d="M38 30 h24 v-10 h-24Z" fill="${Y}"/><path d="M36 20 h28 l-14-10Z" fill="${R}"/><path d="M62 24 l28-8 v16Z" fill="#fff6b0" stroke="none" opacity=".8"/>`);
+D('tag','plats','Tåget',{in:'ombord på ett långt nattåg'},`<path d="M8 74 H92"/><path d="M14 40 h48 v30 H14Z" fill="${G}"/><path d="M62 50 h20 q6 0 6 6 v14 H62Z" fill="${G}"/><path d="M20 46 h12 v10 H20Z M40 46 h12 v10 H40Z" fill="#cfe9ff"/><path d="M70 50 v-14 h8 v14" fill="${K}"/><circle cx="24" cy="76" r="6" fill="${K}"/><circle cx="52" cy="76" r="6" fill="${K}"/><circle cx="76" cy="76" r="6" fill="${K}"/><path d="M74 30 q-6-8 2-12 q8-4 10 4" stroke="#b7aec4"/>`);
+D('ballong','plats','Luftballongen',{in:'högt upp i en luftballong'},`<path d="M50 8 q30 0 30 30 q0 22-22 34 h-16 q-22-12-22-34 q0-30 30-30Z" fill="${R}"/><path d="M50 8 q-12 14-8 64 M50 8 q12 14 8 64" stroke="${Y}" stroke-width="4"/><path d="M44 72 l-4 10 M56 72 l4 10"/><path d="M36 82 h28 v10 H36Z" fill="${Br}"/>`);
+D('vulkanon','plats','Vulkanön',{in:'på en ö med en snällt rykande vulkan'},`<path d="M4 84 q46-10 92 0 v8 H4Z" fill="${B}"/><path d="M14 80 L40 34 H60 L86 80Z" fill="#9b7653"/><path d="M40 34 q10 10 20 0" fill="${R}"/><path d="M46 24 q-8-10 2-14 q8-8 14 2 q10 2 4 12Z" fill="#e3ded6"/><path d="M22 70 q-4-10 4-12 q2 8-4 12Z" fill="#4c9a50"/>`);
+D('lekplats','plats','Lekplatsen',{in:'på den stora lekplatsen'},`<path d="M10 90 H90"/><path d="M18 90 L30 30 L42 90" /><path d="M30 30 h36" stroke-width="4"/><path d="M60 30 v26 M72 30 v26" /><path d="M56 56 h20 v6 H56Z" fill="${R}"/><path d="M80 30 v60"/><path d="M66 30 L88 90" stroke="${Y}" stroke-width="7"/>`);
+D('indien','varld','Indien',{in:'i Indien, bland tempel och elefanter'},`<path d="M20 86 V50 q30-36 60 0 V86Z" fill="#fff"/><path d="M50 14 q-6 8 0 16 q6-8 0-16Z" fill="${Y}"/><path d="M34 86 V64 q16-18 32 0 V86Z" fill="${O}"/><path d="M12 86 V56 h8 V86 M80 86 V56 h8 V86" fill="#fff"/><path d="M10 90 H90"/>`);
+D('brasilien','varld','Brasilien',{in:'i Brasilien, där regnskogen sjunger'},`<path d="M8 90 q40-24 84 0Z" fill="#4c9a50"/><path d="M50 90 V44"/><path d="M50 46 q-26-8-36 6 q20-2 36-6Z M50 46 q24-10 36 2 q-20 0-36-2Z M50 46 q-10-22-26-26 q8 16 26 26Z M50 46 q8-24 26-26 q-8 18-26 26Z" fill="#6cbf5f"/><path d="M66 70 q8-12 18-6 q-2 8-10 10Z" fill="${R}"/>${E(78,68,1.6)}`);
+D('island','varld','Island',{in:'på Island, där gejsrar sprutar'},`<path d="M6 90 q44-12 88 0Z" fill="#9b8f86"/><path d="M44 84 q-6-30 6-56 q12 26 6 56Z" fill="#cfe9ff"/><path d="M50 30 q-10-12 0-20 q10 8 0 20Z" fill="#fff"/><path d="M14 30 q20-10 34 4 M56 22 q20-10 32 6" stroke="#8fe0c8" stroke-width="5"/>`);
+D('newyork','varld','New York',{in:'i New York, staden som aldrig sover'},`<path d="M10 90 V54 h14 V90 M28 90 V30 h16 V90 M48 90 V40 h12 V90 M64 90 V20 h14 V90" fill="#b9b4c4"/><path d="M71 20 V8"/><path d="M32 40 h8 M32 52 h8 M32 64 h8 M68 32 h6 M68 46 h6 M68 60 h6" stroke="${Y}" stroke-width="4"/><path d="M8 90 H92"/>`);
+D('kock','hjalte','Kock',{n:'kocken',i:'en kock'},person({body:'#fff',hairTop:`<path d="M34 26 q-6-14 8-14 q4-8 12-2 q10-6 12 6 q10 2 4 12Z" fill="#fff"/>`,extra:`<path d="M72 70 L84 56" stroke-width="5"/><ellipse cx="86" cy="52" rx="6" ry="4" fill="${Br}"/>`}));
+D('veterinar','hjalte','Djurdoktor',{n:'djurdoktorn',i:'en djurdoktor'},person({body:'#8fe0c8',hair:Hb,extra:`<path d="M44 50 q6 14 12 0" stroke-width="3"/><circle cx="50" cy="66" r="4" fill="#ddd"/><path d="M70 74 q8-10 14-4 q4 8-6 12Z" fill="${O}"/>${E(78,72,1.6)}`}));
+D('morfar','hjalte','Morfar',{n:'morfar',i:'en morfar'},person({body:'#7a6a9c',hair:'#e8e8e8',skin:Sk,face:`${E(45,35)}${E(55,35)}<path d="M42 42 q8 6 16 0" stroke-width="4" stroke="#e8e8e8"/>`,extra:`<path d="M72 92 V58" stroke="${Br}" stroke-width="5"/>`}));
+D('syskon','hjalte','Storasyskon',{n:'storasyskonet',i:'ett storasyskon'},person({body:B,hair:'#b5763f',extra:`<path d="M72 72 l10 2 l-4 10 l-10-2Z" fill="${Y}"/>`}));
+D('magiker','hjalte','Magiker',{n:'magikern',i:'en magiker'},person({body:'#5b3a8c',cape:'#3a2466',hair:K,hairTop:`<path d="M36 22 h28 l-6-16 h-16Z" fill="${K}"/><path d="M32 24 h36" stroke-width="5"/>`,extra:`<path d="M72 70 L86 54" stroke-width="5"/>${star(88,50,6,Y)}`}));
+D('igelkott','van','Igelkott',{n:'igelkotten',i:'en igelkott'},`<path d="M14 74 q0-40 40-40 q30 0 34 30 l-8 10Z" fill="#8a5a3c"/><path d="M22 50 l-8-6 M30 42 l-4-10 M42 36 l0-10 M56 36 l6-8 M68 42 l10-6 M78 54 l10-2" stroke="#8a5a3c" stroke-width="5"/><path d="M74 62 q14 0 16 10 q-8 6-22 4Z" fill="#e3b98a"/>${E(80,66,2)}<circle cx="91" cy="72" r="2.5" fill="${K}" stroke="none"/><path d="M30 76 v8 M60 76 v8"/>`);
+D('skoldpadda','van','Sköldpadda',{n:'sköldpaddan',i:'en sköldpadda'},`<path d="M18 70 q4-36 34-36 q30 0 32 36Z" fill="#6cbf5f"/><path d="M34 48 l10 10 l14-2 l8-10 M44 58 l-4 12 M58 56 l4 14" stroke="#3f8a4a"/><path d="M84 66 q14-4 12-16 q-10-4-14 8Z" fill="#9be08f"/>${E(90,54,2)}<path d="M24 70 v10 M44 70 v10 M62 70 v10 M78 70 v10" stroke-width="5"/>`);
+D('papegoja','van','Papegoja',{n:'papegojan',i:'en papegoja'},`<path d="M50 90 L46 72"/><path d="M36 30 q0-20 20-20 q14 2 14 18 l-4 30 q-6 16-20 14 q-12-4-10-22Z" fill="${R}"/><path d="M42 54 q-14 14-6 32 q10-8 14-26Z" fill="${B}"/><path d="M58 40 q-8 8-4 20 q10-4 10-16Z" fill="${Y}"/><path d="M66 20 q12 2 8 14 q-6-2-8-6Z" fill="${Y}"/>${W(58,22,4)}`);
+D('delfin','van','Delfin',{n:'delfinen',i:'en delfin'},`<path d="M8 76 q42 14 84 0" stroke="${B}" stroke-width="4"/><path d="M16 64 q14-40 52-36 q16 2 22 12 q-8 2-12 0 q2 20-20 28 q-24 8-42-4Z" fill="#8fb8e0"/><path d="M48 30 l6-12 l8 12Z" fill="#8fb8e0"/><path d="M16 64 l-10-8 l2 18Z" fill="#8fb8e0"/>${E(70,40,2.5)}<path d="M76 48 q4 2 8 0"/>`);
+D('sjoodjur','laskig','Sjöodjur',{n:'sjöodjuret',i:'ett sjöodjur'},`<path d="M4 80 q46 12 92 0 v12 H4Z" fill="${B}"/><path d="M18 80 q0-22 14-22 q14 0 14 22Z M50 80 q0-16 10-16 q10 0 10 16Z" fill="#5aa88a"/><path d="M70 80 q2-50 18-58 q8 0 6 10 q-4 6-10 6 q-4 20-4 42Z" fill="#5aa88a"/>${E(88,28,2.5)}<path d="M26 60 l4-8 l4 8" fill="#8fe0c8"/>`);
+D('skuggan','laskig','Skuggan',{n:'skuggan',i:'en skugga'},`<path d="M22 92 q-6-40 8-62 q20-26 40 0 q14 22 8 62 l-10-8 l-8 8 l-8-8 l-8 8 l-8-8Z" fill="#3b3550"/><ellipse cx="42" cy="44" rx="5" ry="7" fill="${Y}" stroke="none"/><ellipse cx="60" cy="44" rx="5" ry="7" fill="${Y}" stroke="none"/>`);
+D('askmoln','laskig','Åskmolnet',{n:'åskmolnet',i:'ett åskmoln'},`<path d="M20 62 q-14 0-14-14 q0-14 16-14 q4-20 24-20 q16 0 22 14 q18-4 24 12 q12 4 8 16 q-2 6-12 6Z" fill="#7a7f96"/><path d="M40 64 L30 84 h10 l-6 14 L56 74 H44 l6-10Z" fill="${Y}"/>${E(42,42,3)}${E(62,42,3)}<path d="M44 52 q8-4 16 0"/>`);
+D('snohaxa','laskig','Snöhäxan',{n:'snöhäxan',i:'en snöhäxa'},person({body:'#cfe9ff',dress:1,skin:'#eaf2ff',longHair:1,hair:'#fff',hairTop:`<path d="M36 22 L40 8 L46 18 L50 4 L54 18 L60 8 L64 22Z" fill="#9fd0f2"/>`,extra:`${star(80,40,7,'#fff')}<path d="M72 72 L82 50" stroke-width="4"/>`}));
+D('busigt','stamning','Busigt',{},`<circle cx="50" cy="52" r="34" fill="${Y}"/><path d="M32 42 l10 4 M68 42 l-10 4"/>${E(38,48)}${E(62,48)}<path d="M34 62 q16 18 32 0"/><path d="M46 70 q4 10 10 4 q2-4-2-6Z" fill="${R}"/>`);
+D('rorande','stamning','Rörande',{},`<circle cx="50" cy="52" r="34" fill="#ffe0a8"/><path d="M34 46 q6-4 12 0 M54 46 q6-4 12 0"/><path d="M40 64 q10 6 20 0"/><path d="M36 54 q-4 10 0 14 q4-4 0-14Z" fill="#9fd0f2"/>${heart(78,22,9,Pk)}`);
+D('hemligt','stamning','Hemligt',{},`<path d="M22 44 h56 v44 H22Z" fill="${Y}"/><path d="M34 44 V32 q0-16 16-16 q16 0 16 16 V44" fill="none" stroke-width="6"/><circle cx="50" cy="62" r="6" fill="${K}"/><path d="M50 66 v10" stroke-width="5"/>`);
+D('fest','slut','Med en fest',{},`<path d="M14 88 L30 30 L52 82Z" fill="${Pk}"/><path d="M20 64 l18 6 M24 48 l14 6" stroke="${Y}" stroke-width="4"/>${star(30,26,7,Y)}<circle cx="70" cy="30" r="12" fill="${B}"/><path d="M70 42 q-4 20 4 46"/><circle cx="84" cy="54" r="9" fill="${R}"/><path d="M84 63 q4 14-2 26"/><path d="M58 14 l4 4 M88 12 l-3 5 M62 60 l5 2" stroke="${O}" stroke-width="4"/>`);
+D('oppet','slut','Öppet slut',{},`<path d="M14 26 h30 v62 H14Z" fill="${Br}"/><path d="M44 26 L72 18 v78 L44 88Z" fill="#c98b5e"/><circle cx="64" cy="58" r="3" fill="${Y}"/><path d="M78 30 q10 0 10 10 q0 8-8 10 v8" stroke-width="5"/><circle cx="80" cy="68" r="3" fill="${K}" stroke="none"/>`);
+D('trollstav','sak','Trollstav',{n:'trollstaven',i:'en trollstav'},`<path d="M18 88 L66 40" stroke-width="10"/><path d="M18 88 L66 40" stroke="${K}" stroke-width="6"/><path d="M58 48 L66 40" stroke="#fff" stroke-width="6"/>${star(72,32,16,Y)}${star(30,30,5,Pk)}${star(86,70,4,'#9fd0f2')}`);
+D('matta','sak','Flygande matta',{n:'den flygande mattan',i:'en flygande matta'},`<path d="M10 54 q20-12 40 0 q20 12 40 0 l-4 20 q-18 10-36 0 q-18-10-36 0Z" fill="${R}"/><path d="M16 60 q16-8 34 2 q16 8 34-2" stroke="${Y}" stroke-width="4"/><path d="M10 54 l-6 6 M14 74 l-6 4 M90 54 l6 4 M86 74 l6 6"/><path d="M28 36 q-6-6 0-10 M62 30 q-6-6 0-10" stroke="#9fd0f2"/>`);
+D('mantel','sak','Osynlighetsmantel',{n:'osynlighetsmanteln',i:'en osynlighetsmantel'},`<path d="M30 16 h40 l14 74 H16Z" fill="#9fd0f2" opacity=".55"/><path d="M30 16 h40 l14 74 H16Z" stroke-dasharray="5 5"/><path d="M38 16 q12 12 24 0" fill="#fff"/>${star(70,60,5,'#fff')}${star(36,70,4,'#fff')}`);
+D('tidsmaskin','sak','Tidsmaskin',{n:'tidsmaskinen',i:'en tidsmaskin'},`<circle cx="50" cy="50" r="34" fill="#e3c56f"/><circle cx="50" cy="50" r="26" fill="#fff"/><path d="M50 50 V30 M50 50 L64 58" stroke-width="4"/><path d="M50 26 v4 M74 50 h-4 M50 74 v-4 M26 50 h4"/><path d="M16 22 l8 8 M84 22 l-8 8" stroke="${R}" stroke-width="5"/><path d="M78 80 q8 2 8-6 M22 80 q-8 2-8-6" stroke="${B}" stroke-width="4"/>`);
+D('dryck','sak','Krympdryck',{n:'krympdrycken',i:'en krympdryck'},`<path d="M40 14 h20 v20 q20 8 20 28 q0 26-30 26 q-30 0-30-26 q0-20 20-28Z" fill="#fff"/><path d="M24 62 q26-8 52 0 q0 24-26 24 q-26 0-26-24Z" fill="#8fe0c8"/><path d="M38 14 h24 v-6 H38Z" fill="${Br}"/><circle cx="44" cy="72" r="3" fill="#fff" stroke="none"/><circle cx="58" cy="68" r="2" fill="#fff" stroke="none"/>`);
+D('ritpenna','sak','Magisk ritpenna',{n:'ritpennan',i:'en magisk ritpenna'},`<path d="M20 84 L70 22 L82 32 L32 94Z" fill="${Y}"/><path d="M20 84 l-4 12 l14-4" fill="#e3b98a"/><path d="M70 22 l8-8 l12 10 l-8 8" fill="${Pk}"/><path d="M40 80 q12 -4 20 6 q8 8 22 0" stroke="${R}" stroke-width="4" stroke-dasharray="3 5"/>${star(86,58,6,Y)}`);
+D('agg','sak','Mystiskt ägg',{n:'det mystiska ägget',i:'ett mystiskt ägg'},`<ellipse cx="50" cy="54" rx="26" ry="34" fill="#f3e8d0"/><circle cx="40" cy="44" r="5" fill="${B}" stroke="none"/><circle cx="60" cy="62" r="6" fill="${G}" stroke="none"/><circle cx="54" cy="36" r="3" fill="${Pk}" stroke="none"/><path d="M34 60 l6 4 l4-6 l6 6 l4-4" stroke-width="3"/><path d="M16 20 l6 4 M84 18 l-6 6 M86 86 l-6-4" stroke="${Y}" stroke-width="4"/>`);
+D('kompass','sak','Vänkompass',{n:'vänkompassen',i:'en kompass som pekar mot vänner'},`<circle cx="50" cy="52" r="34" fill="${Br}"/><circle cx="50" cy="52" r="26" fill="#fff"/><path d="M50 30 L58 52 L50 74 L42 52Z" fill="${R}"/><path d="M50 52 L58 52 L50 74 L42 52Z" fill="#ddd"/>${heart(50,36,6,Pk)}<path d="M50 14 v4"/>`);
+D('onskesten','sak','Önskesten',{n:'önskestenen',i:'en önskesten'},`<path d="M22 72 q-4-26 22-34 q24-6 34 14 q8 20-12 30 q-26 10-44-10Z" fill="#9fb0c8"/><path d="M40 52 q8-8 18-2" stroke="#fff" stroke-width="3"/>${star(70,24,9,Y)}${star(28,24,5,Y)}<path d="M50 20 v6 M47 23 h6"/>`);
+D('spegel','sak','Pratande spegel',{n:'den pratande spegeln',i:'en spegel som kan prata'},`<path d="M50 92 V78"/><path d="M34 92 h32" stroke-width="5"/><ellipse cx="50" cy="44" rx="26" ry="34" fill="${Y}"/><ellipse cx="50" cy="44" rx="19" ry="27" fill="#cfe9ff"/>${E(44,40,2.5)}${E(56,40,2.5)}<path d="M44 52 q6 6 12 0"/><path d="M38 28 l6-6" stroke="#fff" stroke-width="3"/>`);
 
 const CATS=[
   {id:'tid',rib:'När',q:'När händer det?',long:'Tid',c:'#ffd9a8'},
@@ -1174,10 +1217,11 @@ const CATS=[
   {id:'hjalte',rib:'Hjälte',q:'Vem är hjälten?',long:'Hjälte',c:'#ffc3c3'},
   {id:'van',rib:'Vän',q:'Vem är vännen?',long:'Vän och hjälpreda',c:'#ffe08a'},
   {id:'laskig',rib:'Läskig',q:'Vem är läskig?',long:'Läskig figur',c:'#d7c6f2'},
+  {id:'sak',rib:'Magi',q:'Finns det något magiskt?',long:'Magiskt föremål',c:'#e6d5ff'},
   {id:'stamning',rib:'Känsla',q:'Hur ska det kännas?',long:'Stämning',c:'#f9c6e4'},
   {id:'slut',rib:'Slutet',q:'Hur slutar det?',long:'Slut',c:'#c9ece6'},
 ];
-const CAT_EMO={tid:'🕰️',plats:'🌳',varld:'🌍',hjalte:'🦸',van:'🐶',laskig:'👻',stamning:'💖',slut:'🌙'};
+const CAT_EMO={tid:'🕰️',plats:'🌳',varld:'🌍',hjalte:'🦸',van:'🐶',laskig:'👻',sak:'🪄',stamning:'💖',slut:'🌙'};
 const catKeys=id=>Object.keys(I).filter(k=>I[k].cat===id);
 
 /* sprite */
@@ -1244,6 +1288,15 @@ const SC={
   amazonas:{g:'#4f9e4f',gs:'hills',deco:[['djungel',-20,170],['amazonas',260,110]]},
   atlantis:{g:'#e8d29a',gs:'seabed',water:1,sky:['#2f7fc4','#8fd0f0'],deco:[['atlantis',170,220]]},
   godisland:{g:'#ffd1ea',gs:'hills',sky:['#ffd1ea','#fff3fa'],deco:[['godisland',150,230]]},
+  fyr:{g:'#9b8f86',gs:'sea',deco:[['fyr',250,120]]},
+  tag:{g:'#8fcf6a',gs:'hills',deco:[['tag',150,190],['skog',-20,130]]},
+  ballong:{g:'#cfe9ff',gs:'clouds',deco:[['ballong',230,40],['ballong',30,90]]},
+  vulkanon:{g:B,gs:'sea',deco:[['vulkanon',220,140]]},
+  lekplats:{g:'#8fcf6a',gs:'flat',deco:[['lekplats',220,180],['skog',-20,130]]},
+  indien:{g:'#e3c56f',gs:'flat',sky:SKY_WARM,deco:[['indien',220,180]]},
+  brasilien:{g:'#4f9e4f',gs:'hills',deco:[['brasilien',-10,170],['brasilien',250,180]]},
+  island:{g:'#9b8f86',gs:'rock',deco:[['island',220,170]]},
+  newyork:{g:'#b9b4c4',gs:'flat',deco:[['newyork',0,170],['newyork',230,180]]}
 };
 const HOR={seabed:236,clouds:236,hills:228,flat:238,sea:206,dunes:230,snow:228,rock:236,moon:236,mars:236,floor:226,space:300};
 function rng(seed){let s=7;for(const c of String(seed))s=(s*31+c.charCodeAt(0))>>>0;return()=>((s=(s*1664525+1013904223)>>>0)/4294967296)}
@@ -1347,7 +1400,7 @@ const WP={
   red:[['#f2c1b0','#fbe8dd','#3a1a14'],['#2f1414','#4a1f1f','#fbeee8'],'sparkle'],
   swe:[['#cde3f5','#fdf3c4','#1e2a40'],['#14243a','#2a3350','#f0f4fb'],'leaf'],
 };
-const WMAP={stenalder:'jungle',sommarlov:'green',jul:'snow',midsommar:'green',halloween:'dark',vinter:'snow',nojesfalt:'city',tradkoja:'green',skola:'city',sjo:'sea',underhavet:'sea',molnen:'fairy',bibliotek:'fairy',cirkus:'red',japan:'red',italien:'warm',australien:'warm',amazonas:'jungle',atlantis:'sea',godisland:'fairy',skog:'green',bondgard:'green',hemma:'green',farfar:'green',riddartid:'green',djungel:'jungle',urtid:'jungle',hav:'sea',vikingatid:'sea',savann:'warm',oken:'warm',egypten:'warm',berg:'snow',arktis:'snow',rymden:'space',manen:'space',mars:'space',framtid:'space',stad:'city',nutid:'city',frankrike:'city',slott:'fairy',sagolandet:'fairy',sagotid:'fairy',grotta:'dark',under:'dark',laskigt:'dark',kina:'red',sverige:'swe'};
+const WMAP={stenalder:'jungle',sommarlov:'green',jul:'snow',midsommar:'green',halloween:'dark',vinter:'snow',nojesfalt:'city',tradkoja:'green',skola:'city',sjo:'sea',underhavet:'sea',molnen:'fairy',bibliotek:'fairy',cirkus:'red',japan:'red',italien:'warm',australien:'warm',amazonas:'jungle',atlantis:'sea',godisland:'fairy',skog:'green',bondgard:'green',hemma:'green',farfar:'green',riddartid:'green',djungel:'jungle',urtid:'jungle',hav:'sea',vikingatid:'sea',savann:'warm',oken:'warm',egypten:'warm',berg:'snow',arktis:'snow',rymden:'space',manen:'space',mars:'space',framtid:'space',stad:'city',nutid:'city',frankrike:'city',slott:'fairy',sagolandet:'fairy',sagotid:'fairy',grotta:'dark',under:'dark',laskigt:'dark',kina:'red',sverige:'swe',host:'warm',varen:'green',pask:'green',fodelsedag:'fairy',fullmane:'dark',fyr:'sea',tag:'green',ballong:'fairy',vulkanon:'sea',lekplats:'green',indien:'warm',brasilien:'jungle',island:'snow',newyork:'city'};
 let wallKey='def';
 function isDark(){const t=document.documentElement.getAttribute('data-theme');if(t)return t==='dark';return matchMedia('(prefers-color-scheme: dark)').matches}
 function applyWall(key){wallKey=WMAP[key]||'def';const w=WP[wallKey],v=w[isDark()?1:0],st=document.documentElement.style;st.setProperty('--wall',v[0]);st.setProperty('--wall2',v[1]);st.setProperty('--wall-ink',v[2]);BG.set(w[2])}
@@ -1456,21 +1509,22 @@ addEventListener('resize',()=>{if(S.view==='bygg')fitTiles()});
 $('#ribbons').addEventListener('click',e=>{const b=e.target.closest('.rib');if(b){S.cat=b.dataset.cat;renderBuild()}});
 $('#qnext').addEventListener('click',e=>{S.cat=e.currentTarget.dataset.cat;renderBuild();const r=document.querySelector(`.rib[data-cat="${S.cat}"]`);if(r)r.scrollIntoView({inline:'center',block:'nearest'})});
 $('#tiles').addEventListener('click',e=>{const b=e.target.closest('.tile');if(!b)return;toggleSel(b.dataset.k)});
+const MAXSEL=20;
 function toggleSel(k){
   const i=S.sel.indexOf(k);
   if(i>=0)S.sel.splice(i,1);
-  else{if(S.sel.length>=10){toast('Max 10 bilder. Tryck på en vald bild för att ta bort den.');return}S.sel.push(k);LS.set('coachBuild',true)}
+  else{if(S.sel.length>=MAXSEL){toast(`Max ${MAXSEL} bilder. Tryck på en vald bild för att ta bort den.`);return}S.sel.push(k);LS.set('coachBuild',true)}
   renderBuild();
 }
-function inStoryHTML(){if(!S.kids.length)return'';return `<div><div class="lbl">Vilka barn är med i sagan?</div><div class="kidchips">${S.kids.map(k=>`<button class="kc kcav" data-instory="${k.id}" aria-pressed="${S.inStory.includes(k.id)}" style="--kc:${kidCol(k.id)}">${ic(kidKey(k.id),'')}${esc(k.name)}</button>`).join('')}</div><p class="mini">Barnen blir egna figurer i sagan och räknas inte in bland de 10 bilderna.</p></div>`}
+function inStoryHTML(){if(!S.kids.length)return'';return `<div><div class="lbl">Vilka barn är med i sagan?</div><div class="kidchips">${S.kids.map(k=>`<button class="kc kcav" data-instory="${k.id}" aria-pressed="${S.inStory.includes(k.id)}" style="--kc:${kidCol(k.id)}">${ic(kidKey(k.id),'')}${esc(k.name)}</button>`).join('')}</div><p class="mini">Barnen blir egna figurer i sagan och räknas inte in bland de 20 bilderna.</p></div>`}
 function listenKids(){return S.kids.filter(k=>S.listen.includes(k.id))}
 function renderRecipe(){
   const n=S.sel.length,ok=n>=3;
-  const slots=Array.from({length:10},(_,i)=>{const k=S.sel[i];return k?`<button class="slot full" data-rm="${k}" aria-label="Ta bort ${esc(I[k].label)}" title="${esc(I[k].label)}">${ic(k,'')}</button>`:`<span class="slot"></span>`}).join('');
+  const slots=Array.from({length:Math.max(10,Math.min(MAXSEL,Math.ceil((S.sel.length+1)/5)*5))},(_,i)=>{const k=S.sel[i];return k?`<button class="slot full" data-rm="${k}" aria-label="Ta bort ${esc(I[k].label)}" title="${esc(I[k].label)}">${ic(k,'')}</button>`:`<span class="slot"></span>`}).join('');
   const kids=S.kids.length?`<div class="kidchips">${S.kids.map(k=>`<button class="kc" data-listen="${k.id}" aria-pressed="${S.listen.includes(k.id)}" style="--kc:${kidCol(k.id)}">${esc(k.name)}, ${k.age} år</button>`).join('')}</div>`
     :`<div class="row"><label for="ageSel" class="mini">Lyssnarens ålder</label><select id="ageSel">${Array.from({length:12},(_,i)=>`<option ${S.age===i+1?'selected':''}>${i+1}</option>`).join('')}</select></div><p class="mini">Tips: lägg in barnen under <button class="link" data-go="barnen">Barnen</button> så kommer sagorna ihåg dem.</p>`;
-  $('#recipe').innerHTML=`<div><h2>Din saga</h2><div class="count">${n} av 10 bilder${n<3?` · välj minst ${3-n} till`:''}</div></div><div class="slots">${slots}</div><div><div class="lbl">Vem lyssnar i kväll?</div>${kids}</div>${inStoryHTML()}<button class="btn go" id="doneBtn" ${ok?'':'disabled'}>Klar – nästan dags för saga</button>${n?`<button class="link" id="clearSel">Börja om</button>`:''}`;
-  $('#tray').innerHTML=`<div class="ics">${S.sel.map(k=>`<span data-rm="${k}" role="button" aria-label="Ta bort ${esc(I[k].label)}">${ic(k,'')}</span>`).join('')||'<span class="mini"><b>Steg 1 av 2:</b> välj 3–10 bilder</span>'}</div>${ok?'':`<span class="count">${n?'Minst '+(3-n)+' till':''}</span>`}<button class="btn go" id="doneBtn2" ${ok?'':'disabled'}>Nästa →</button>`;
+  $('#recipe').innerHTML=`<div><h2>Din saga</h2><div class="count">${n} av ${MAXSEL} bilder${n<3?` · välj minst ${3-n} till`:''}</div></div><div class="slots">${slots}</div><div><div class="lbl">Vem lyssnar i kväll?</div>${kids}</div>${inStoryHTML()}<button class="btn go" id="doneBtn" ${ok?'':'disabled'}>Klar – nästan dags för saga</button>${n?`<button class="link" id="clearSel">Börja om</button>`:''}`;
+  $('#tray').innerHTML=`<div class="ics">${S.sel.map(k=>`<span data-rm="${k}" role="button" aria-label="Ta bort ${esc(I[k].label)}">${ic(k,'')}</span>`).join('')||'<span class="mini"><b>Steg 1 av 2:</b> välj 3–20 bilder</span>'}</div>${ok?'':`<span class="count">${n?'Minst '+(3-n)+' till':''}</span>`}<button class="btn go" id="doneBtn2" ${ok?'':'disabled'}>Nästa →</button>`;
 }
 $('#recipe').addEventListener('click',e=>{
   const rm=e.target.closest('[data-rm]');if(rm)return toggleSel(rm.dataset.rm);
@@ -1591,7 +1645,11 @@ const ENDTXT={
   cliff:'Detta är en följetång. Avsluta mitt i en spännande stund med en cliffhanger. Ge i "next" exakt tre olika, korta förslag (högst 10 ord vardera) på vart nästa avsnitt kan ta vägen.',
   godnatt:'Avsluta lugnt och sövande så att alla i sagan somnar. Sista sidan ska vara mjuk och lugn att läsa högt.',
   overrask:'Avsluta med en glad överraskning som ingen anade.',
-  lardom:'Låt sagan landa i en varm, enkel lärdom, utan att predika.'
+  lardom:'Låt sagan landa i en varm, enkel lärdom, utan att predika.',
+  skratt:'Avsluta med något riktigt roligt som får alla att skratta.',
+  hemigen:'Avsluta med att alla kommer hem igen, trygga och glada.',
+  fest:'Avsluta med en stor, glad fest där alla figurer är med.',
+  oppet:'Avsluta med ett öppet slut som får lyssnarna att fantisera vidare om vad som händer sen.'
 };
 function endingOf(themes){if(themes.includes('cliff'))return'cliff';return themes.find(k=>I[k].cat==='slut')||'lyckligt'}
 function ctxFrom(o){
@@ -1655,30 +1713,52 @@ function mkStory(c,b){
     ctx:{kidChars:c.kidChars||[],themes:c.themes,names:c.names,descs:c.descs||{},extra:c.extra,kidIds:c.kidIds,kids:c.kids,ages:c.ages,pages:c.pages,wpp:c.wpp,minutes:c.minutes}};
 }
 function offlineStory(c){
-  const hk=c.cast.find(k=>I[k].cat==='hjalte')||c.cast.find(k=>I[k].cat==='barn')||'barnet',vk=c.cast.find(k=>I[k].cat==='laskig'),fk=c.cast.find(k=>I[k].cat==='van');
-  const H=disp(hk,c)||'barnet',V=vk?disp(vk,c):null,F=fk?disp(fk,c):null;
-  const pk=c.themes.find(k=>['plats','varld'].includes(I[k].cat)),P=pk?I[pk].in:'i en liten by';
-  const tk=c.themes.find(k=>I[k].cat==='tid'),T=tk?I[tk].t:'Det var en gång';
-  const sc=c.scenes[0],mood=c.themes.find(k=>I[k].cat==='stamning');
-  const k2=c.cast.find(k=>I[k].cat==='barn'&&k!==hk);const all=[hk,k2,fk,vk].filter(Boolean).slice(0,4);
-  const pg=(text,cast,action='lugn',time='dag')=>({text,cast,action,time,scene:sc});
-  const beats=[pg(`${T} bodde ${H} ${P}. Varje morgon sträckte ${H} på sig och sa: ”Undrar vad som händer i dag?”`,[hk],'glad')];
-  if(F)beats.push(pg(`En dag hördes ett litet ljud bakom en sten. Där satt ${F}! ”Får jag följa med dig?” frågade ${F}. ”Klart du får”, sa ${H}. Och så var de två.`,[hk,fk],'glad'));
-  beats.push(pg(`Men ${P} hade något konstigt börjat hända. Det prasslade och det knakade, och någon hade lämnat jättestora fotspår efter sig.`,[hk,fk].filter(Boolean),'lugn'));
-  if(V)beats.push(pg(`Plötsligt stod ${V} där! ${cap(V)} var stor och såg väldigt farlig ut. ”Vem är det som smyger omkring här?” mullrade ${V}.`,all,'radd'));
-  beats.push(pg(`${cap(H)} tog ett djupt andetag. Hjärtat dunkade som en trumma. ”Jag är inte rädd”, viskade ${H}. Fast lite rädd var ${H} faktiskt.`,[hk,vk].filter(Boolean),'radd'));
-  const mid={roligt:`Då nös ${V||'vinden'} så hårt att alla löv flög upp i luften och landade som små hattar på allas huvuden. Ingen kunde låta bli att skratta.`,spanning:`De sprang så fort de kunde, över stock och sten, under grenar och genom buskar, tills de inte orkade ett steg till.`,magiskt:`Då började luften glittra. Små stjärnor dansade runt ${H}, och plötsligt kändes allt möjligt.`,romans:`I det rosa kvällsljuset möttes två blickar, och ett litet hjärta började slå extra fort.`,mysigt:`De gjorde upp en liten eld, värmde händerna och delade på en kaka som smakade kanel.`,laskigt:`Det blev mörkare och mörkare. Någonstans knarrade en gren. Kriiiik.`};
-  const extra=[mid[mood]||`De vandrade vidare tillsammans. Ibland vänster, ibland höger, och en gång rakt fram i en stor vattenpöl. Plask!`,`Vägen ringlade sig som en lång orm. Bakom varje krök väntade något nytt att titta på.`,`”Vi måste vara modiga nu”, sa ${H}. ${F?cap(F)+' nickade.':'Och det var de.'}`,`Solen flyttade sig långsamt över himlen medan de letade och letade.`];
-  if(V){beats.push(pg(`Då såg ${H} något som ingen annan hade märkt. En liten tår rann nerför ${V}s kind. ”Varför är du ledsen?” frågade ${H}.`,[hk,vk],'lugn'));beats.push(pg(`”Ingen vill någonsin leka med mig”, snyftade ${V}. ”Alla springer bara sin väg.” ${cap(H)} funderade en stund. Sen log ${H}. ”Då leker vi med dig!”`,all,'glad'))}
-  const endB={lyckligt:pg(`Och så blev det. Hela dagen lekte de ${P}, och när solen gick ner var alla bästa vänner. Snipp, snapp, snut – så var sagan slut.`,all,'glad'),
-    laskigtslut:pg(`Alla gick hem och lade sig. Allt var lugnt och tyst. Men när lampan släcktes … blinkade två gula ögon i mörkret.`,[vk||hk],'radd','natt'),
-    cliff:pg(`Men just när de skulle gå hem började marken skaka. Något ännu större var på väg … Fortsättning följer!`,all,'radd'),
-    godnatt:pg(`Till slut blev alla så trötta. ${cap(H)} gäspade${F?', '+F+' gäspade':''}${V?', och till och med '+V+' gäspade':''}. Sov gott, allesammans. God natt.`,all,'sova','natt'),
-    overrask:pg(`Och då … PANG! Konfetti överallt! Det var en överraskningsfest, och den var för ${H}.`,all,'glad'),
-    lardom:pg(`Och ${H} lärde sig något viktigt den dagen: den som verkar läskig kan bara behöva en vän.`,all,'glad')}[c.ending]||null;
-  let pages=beats;let i=0;while(pages.length<c.pages-1){pages.splice(2+i%3,0,pg(extra[i%extra.length],[hk,fk].filter(Boolean),'glad'));i++}
-  pages=pages.slice(0,Math.max(2,c.pages-1));pages.push(endB||pg(`Snipp, snapp, snut – så var sagan slut.`,all,'glad'));
-  return mkStory(c,{offline:true,title:`${cap(H)} och ${V||'det stora äventyret'}`,dedication:c.kids.length?`Till ${c.kids.map(k=>k.name).join(' och ')}.`:'',pages,summary:`${cap(H)} mötte ${V||'något mystiskt'} ${P}.`,next:c.ending==='cliff'?['Ett hemligt meddelande dyker upp','Någon behöver hjälp långt bort','Spåren leder till en okänd dörr']:[]});
+  const by=cat=>c.themes.filter(k=>I[k]&&I[k].cat===cat);
+  const hk=c.cast.find(k=>I[k].cat==='hjalte')||c.cast.find(k=>I[k].cat==='barn')||'barnet';
+  const kids=c.cast.filter(k=>I[k].cat==='barn'&&k!==hk),fr=by('van'),vi=by('laskig'),th=by('sak');
+  const H=disp(hk,c)||'barnet',F=fr.map(k=>disp(k,c)),V=vi.map(k=>disp(k,c)),T=th.map(k=>I[k].n||I[k].label.toLowerCase());
+  const KN=kids.map(k=>c.names[k]||disp(k,c));
+  const sc=c.scenes.length?c.scenes:['skog'],P=k=>(I[k]&&I[k].in)||'i en liten by';
+  const tk=by('tid')[0],T0=tk?I[tk].t:pick(['Det var en gång','En alldeles vanlig morgon','Långt, långt borta','En kväll när stjärnorna precis tänts']);
+  const mood=by('stamning')[0]||'aventyr',K=storyConcept();
+  const sound=pick(['Plipp, plopp, hurra!','Svisch, svosch, framåt!','Bom-bom-bastant!','Tjo och tjim, nu kör vi!','Hopp, hopp, hoppsan!','Fnitter-fnatter-fnurr!']);
+  const team=[H,...KN,...F].filter(Boolean),TeamTxt=()=>cap(teamTxt),teamTxt=team.length>1?team.slice(0,-1).join(', ')+' och '+team[team.length-1]:H;
+  const all=[hk,...kids,...fr,...vi].slice(0,4),heroes=[hk,...kids,...fr].slice(0,4);
+  let PR=5;const pg=(text,cast,action='lugn',time='dag',s)=>({text,cast:(cast||[hk]).filter(Boolean).slice(0,4),action,time,scene:s||sc[0],pr:PR});
+  const pages=[];PR=10;
+  // början
+  pages.push(pg(`${T0} bodde ${H} ${P(sc[0])}. ${pick([`${cap(H)} älskade att upptäcka saker, särskilt sådant som ingen annan hade lagt märke till.`,`Varje morgon sa ${H}: ”I dag händer det något, det känner jag i tårna!”`,`${cap(H)} hade en ficka full av små hemligheter och ett huvud fullt av frågor.`])}${KN.length?` Med på allt var ${KN.join(' och ')}.`:''}`,[hk,...kids],'glad'));
+  PR=6;if(F.length)pages.push(pg(`${pick(['Bakom en buske','Uppe i ett träd','Under en stor sten','Mitt på stigen'])} satt ${F[0]}. ”${pick(['Får jag hänga med?','Ska vi ha ett äventyr i dag?','Jag har väntat på dig hela dagen!'])}” frågade ${F[0]}.${F[1]?` Strax efter dök ${F.slice(1).join(' och ')} upp också.`:''} ”${sound}” ropade de tillsammans.`,[hk,...fr],'glad'));
+  // problemet ur sagokonceptet
+  PR=10;pages.push(pg(`Men den här dagen var något fel: ${K.core}. Mitt i alltihop låg ${pick(['något som glittrade','något som rörde lite på sig','något som brummade lågt'])} – det var den ${K.thing}! ”Vad i hela friden är det där?” viskade ${H}.`,heroes,'lugn'));
+  PR=7;if(T.length)pages.push(pg(`I en gammal låda hittade ${teamTxt} ${T.map(t=>t.replace(/^(den|det) /,'')).length>1?'flera märkliga saker':'något märkligt'}: ${th.map(k=>I[k].i||I[k].label.toLowerCase()).join(' och ')}. ${cap(T[0])} ${pick(['blinkade två gånger, som om den ville säga hej','började genast surra försiktigt','kändes varm och snäll i handen'])}. ”Den kan nog hjälpa oss”, sa ${H}.`,heroes,'glad'));
+  // resan genom platserna
+  const sensory=['Det luktade av regn och kanel','Vinden fnissade i öronen','Marken knastrade under fötterna','Någonstans hördes en liten melodi','Ljuset blev gyllene som honung'];
+  sc.slice(1).forEach((s,i)=>{PR=i?2:4;pages.push(pg(`${pick(['Snart var de','Plötsligt befann de sig','Efter en stund var de'])} ${P(s)}. ${sensory[i%sensory.length]}. ”${sound}” sjöng ${teamTxt} för att hålla modet uppe.`,heroes,'glad','dag',s))});
+  // de läskiga
+  V.forEach((v,i)=>{const vk=vi[i];PR=i?5:9;
+    pages.push(pg(`${pick(['Då hördes ett mullrande','Då blev det plötsligt kallt','Då föll en lång skugga över dem'])} – och där stod ${v}! ${cap(v)} ${pick(['var större än ett hus','hade ögon som lysande lyktor','fräste så att löven darrade'])}. ”Vem är det som stör?” sa ${v}.`,[hk,vk,...fr.slice(0,1)],'radd',mood==='laskigt'?'natt':'dag'));
+    pages.push(pg(`${cap(H)} tog ett djupt andetag. Hjärtat dunkade som en trumma. Men i stället för att springa frågade ${H}: ”Varför är du så arg?” ${cap(v)} blev alldeles tyst. ”Ingen har någonsin frågat det förut”, sa ${v} lågt. Det handlade om ${K.heart}.`,[hk,vk],'lugn'))});
+  // tre försök
+  PR=8;pages.push(pg(`De försökte lösa problemet. Första gången gick det snett – ${pick(['allt rullade iväg åt fel håll','det blev bara en stor sörja','det sa bara PLOFF'])}. Andra gången nästan, nästan. ”En gång till!” sa ${H}. ${T.length?`Den här gången hjälpte ${T[0]} till`:`Den här gången hjälptes alla åt`}, och den tredje gången – då lyckades det!`,all,'jakt'));
+  // fyllnad tills rätt längd
+  const extra=[`Medan de vilade berättade ${F[0]||H} en hemlighet: ${pick(['att stjärnorna ibland blinkar tillbaka om man vinkar','att det finns en färg som bara syns när man skrattar','att stenar kan drömma om de ligger i solen'])}.`,`De delade på en matsäck med ${pick(['knäckebröd och smultron','pannkakor rullade som snäckor','mackor med blåbär'])}, och ${V[0]||'vinden'} fick också smaka.`,`${cap(H)} upptäckte att ${K.thing.split(' ').slice(1).join(' ')} kunde ${pick(['skratta','vissla en melodi','byta färg när någon var glad'])}. Det var nästan magiskt.`,`De gick förbi ${pick(['en bro som knarrade godnatt','en bäck som pratade för sig själv','ett hus där fönstren blinkade'])}. ”${sound}” sa de en gång till.`];
+  PR=1;let x=0;while(pages.length<c.pages-1&&x<12){pages.splice(Math.min(pages.length-1,2+x%4),0,pg(extra[x%extra.length],heroes,'glad'));x++}
+  while(pages.length>Math.max(2,c.pages-1)){let lo=0;pages.forEach((p,i)=>{if(p.pr<pages[lo].pr||(p.pr===pages[lo].pr&&i>lo))lo=i});pages.splice(lo,1)}
+  pages.forEach(p=>delete p.pr);
+  const endB={lyckligt:`Och så blev allt bra igen. ${cap(teamTxt)} skrattade hela vägen hem, och ${V.length?V.join(' och ')+' fick nya vänner':'den '+K.thing+' fick ett nytt hem'}. Snipp, snapp, snut – så var sagan slut.`,
+    laskigtslut:`Alla gick hem och lade sig. Allt var lugnt och tyst. Men när lampan släcktes … blinkade två gula ögon i mörkret.`,
+    cliff:`Men just när de skulle gå hem började den ${K.thing} att lysa starkare än någonsin. Något nytt var på väg … Fortsättning följer!`,
+    godnatt:`Till slut blev alla så trötta. ${cap(teamTxt)} gäspade${V.length?', och till och med '+V[0]+' gäspade':''}. ”${sound}” viskade de, mycket tyst nu. Sov gott, allesammans. God natt.`,
+    overrask:`Och då … PANG! Konfetti överallt! Det var en överraskning, och den var för ${H}.`,
+    lardom:`Och ${H} lärde sig något viktigt den dagen: ${K.heart} gör världen lite varmare.`,
+    fest:`Den kvällen blev det fest! ${cap(teamTxt)}${V.length?' och '+V.join(' och '):''} dansade tills månen log. ”${sound}” ropade alla.`,
+    skratt:`Och precis då nös ${V[0]||F[0]||H} så hårt att ${pick(['alla hattar flög iväg','den '+K.thing+' rullade runt tre varv','hela världen skrattade'])}. Ingen kunde sluta skratta.`,
+    hemigen:`Till slut var de hemma igen, trygga och glada, med en hel ficka full av minnen.`,
+    oppet:`Och den ${K.thing}? Den försvann lika plötsligt som den kom. Vart tror du att den tog vägen?`}[c.ending]||`Snipp, snapp, snut – så var sagan slut.`;
+  const endAct={godnatt:'sova',laskigtslut:'radd',cliff:'radd'}[c.ending]||'glad';
+  let out=pages;out.forEach((p,i)=>{p.scene=sc[Math.min(sc.length-1,Math.floor(i*sc.length/out.length))]});PR=0;out.push(pg(endB,all,endAct,['godnatt','laskigtslut'].includes(c.ending)?'natt':'dag'));
+  return mkStory(c,{offline:true,title:pick([`${cap(H)} och den ${K.thing}`,`${cap(H)}${V.length?' och '+V[0]:''} – ett äventyr`,`Den ${K.thing}`,`${cap(H)} och ${K.heart.replace(/^att /,'konsten att ')}`]),dedication:c.kids.length?`Till ${c.kids.map(k=>k.name).join(' och ')}.`:'',pages:out,summary:`${cap(H)} löste ett problem: ${K.core}.`,next:c.ending==='cliff'?['Den '+K.thing+' visar vägen till något nytt','Någon behöver hjälp långt bort','En hemlig dörr öppnar sig']:[]});
 }
 
 let GEN={ctl:null,timer:null};
