@@ -316,7 +316,7 @@ function installGuide(force){
 }
 document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>installGuide(false),900));
 window.SV_AI={open,installGuide,localOnly:()=>(cfg().engine||'none')==='none',elFile:async id=>{const j=EL_JOBS[id];return new File([j.blob],'berattarrost.mp3',{type:'audio/mpeg'})},elVoices,pickEngine,ENGINES,kv};
-document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('aiBtn');if(b){b.hidden=false;b.onclick=()=>open()}
+document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('aiBtn');if(b){b.hidden=false;b.onclick=()=>{if(typeof KID!=='undefined'&&KID.on)KID.gate(()=>open());else open()}}
   const st=document.createElement('style');st.textContent=`.aiopts{display:flex;flex-direction:column;gap:6px}
 .aiopt{display:flex;gap:10px;align-items:flex-start;border:2.5px solid var(--edge);border-radius:14px;padding:8px 10px;cursor:pointer;background:#fff}
 .aiopt.on{border-color:var(--ink);background:var(--pick-soft)}.aiopt input{margin-top:3px;width:18px;height:18px;accent-color:var(--cover)}
@@ -604,7 +604,7 @@ body.kid .homebtn{padding:.4em .8em}body.kid .homebtn .bi{width:24px;height:24px
 /* ===== barnläge ===== */
 .kidhome,.remo{display:none}
 .modebtn{white-space:nowrap}
-body.kid .nav [data-go="barnen"],body.kid #aiBtn{display:none}
+body.kid .nav [data-go="barnen"]{display:none}
 body.kid .home .kicker,body.kid .home .steps3,body.kid .home .lead,body.kid .home .actions,body.kid #readExample{display:none}
 body.kid .kidhome{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;width:100%}
 .kbig{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:110px;min-height:104px;padding:10px 14px;border:3.5px solid var(--ink);border-radius:26px;background:var(--pick);color:var(--ink);font-family:var(--f-display);font-weight:800;font-size:1.15rem;box-shadow:0 5px 0 var(--ink);cursor:pointer}
@@ -998,7 +998,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v38 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v39 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1543,11 +1543,11 @@ const KID={on:LS.get('kidMode',true),
     if(on){Voice.stop();$('#modal').innerHTML='';if(['barnen'].includes(S.view))show('home')}
     if(S.view==='bygg')renderBuild();if(S.view==='read')renderSheet();if(S.view==='hyllan')renderLib();if(S.view==='home')renderHome()},
   btn(){const b=$('#modeBtn');if(b){b.innerHTML=this.on?'🔒 Vuxen':'🧒 Barnläge';b.title=this.on?'Håll inne för att gå till vuxenläge':'Byt till barnläge'}},
-  gate(){$('#modal').innerHTML=`<div class="mback" role="dialog" aria-modal="true" aria-labelledby="gth"><div class="sheet" style="width:min(380px,100%);text-align:center;align-items:center">
+  gate(after){$('#modal').innerHTML=`<div class="mback" role="dialog" aria-modal="true" aria-labelledby="gth"><div class="sheet" style="width:min(380px,100%);text-align:center;align-items:center">
     <h2 id="gth">För vuxna</h2><p class="mini">Håll inne knappen i 3 sekunder för att gå till vuxenläge.</p>
     <button class="btn gatebtn" id="gateHold"><span class="gfill"></span><span style="position:relative">Håll inne</span></button><button class="chipbtn" id="gateNo">Stäng</button></div></div>`;
     const m=$('#modal'),h=$('#gateHold');let t=null;
-    const down=e=>{e.preventDefault();h.classList.add('hold');t=setTimeout(()=>{m.innerHTML='';KID.set(false);toast('Vuxenläge')},3000)};const up=()=>{clearTimeout(t);h.classList.remove('hold')};
+    const down=e=>{e.preventDefault();h.classList.add('hold');t=setTimeout(()=>{m.innerHTML='';KID.set(false);toast('Vuxenläge');if(typeof after==='function')after()},3000)};const up=()=>{clearTimeout(t);h.classList.remove('hold')};
     h.addEventListener('pointerdown',down);['pointerup','pointerleave','pointercancel'].forEach(ev=>h.addEventListener(ev,up));h.addEventListener('contextmenu',e=>e.preventDefault());
     m.onclick=e=>{if(e.target.id==='gateNo'||e.target.classList.contains('mback'))m.innerHTML=''};m.onchange=null}};
 $('#modeBtn').onclick=()=>{if(KID.on)KID.gate();else{KID.set(true);toast('Barnläge 🧒')}};
@@ -2523,8 +2523,10 @@ const Rec={a:null,on:false,b:[],tr:null,trSt:null,pr:null,ok:false,
     const a=this.el(),ready=this.trSt===st&&this.sg===this.sig(st)&&this.tr;
     a.onended=null;a.ontimeupdate=null;
     a.src=ready?this.tr.url:silentWavURL();
+    try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+    Unlock.stop();a.muted=false;a.volume=1;
     let p;try{p=a.play()}catch(e){p=Promise.reject(e)}
-    Unlock.start();Keep.start();
+    Keep.start();
     this.on=true;$('#rRead').classList.add('on');$('#rRead').innerHTML=RB(true);$('#lisbar').hidden=false;$('#rPg').hidden=true;$('#lisTxt').textContent='Startar inspelningen…';
     const go=async()=>{
       try{await p;this.ok=true}catch(e){if(!this.on)return;this.stop();needTap();return}
