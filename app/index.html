@@ -931,7 +931,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v28 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v29 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1408,7 +1408,7 @@ $('#recipe').addEventListener('change',e=>{if(e.target.id==='ageSel')S.age=+e.ta
 $('#tray').addEventListener('click',e=>{if(e.target.id==='doneBtn2'){openFinish();return}const rm=e.target.closest('[data-rm]');if(rm)toggleSel(rm.dataset.rm)});
 
 /* ============ barnläge / vuxenläge ============ */
-const KID={on:LS.get('kidMode',false),
+const KID={on:LS.get('kidMode',true),
   set(on){this.on=on;LS.set('kidMode',on);document.body.classList.toggle('kid',on);this.btn();
     if(on){Voice.stop();$('#modal').innerHTML='';if(['barnen'].includes(S.view))show('home')}
     if(S.view==='bygg')renderBuild();if(S.view==='read')renderSheet();if(S.view==='hyllan')renderLib();if(S.view==='home')renderHome()},
