@@ -556,6 +556,9 @@ input[type=checkbox]{width:22px;height:22px;accent-color:var(--cover)}
 .sttext.live{border-color:#d1342b;box-shadow:0 0 0 3px #ffe3e1}
 .dglog{white-space:pre-wrap;word-break:break-word;font-size:.75rem;max-height:40vh;overflow:auto;background:#fff;border:2px solid var(--edge);border-radius:10px;padding:8px;user-select:text;-webkit-user-select:text;margin:0}
 .studio{width:min(720px,100%);gap:12px}
+.homebtn{gap:5px}.homebtn .bi{width:20px;height:20px}
+body.kid .homebtn{padding:.4em .8em}body.kid .homebtn .bi{width:24px;height:24px}
+@media (max-width:480px){.homebtn .hl{display:none}.top .brand{display:none}.nav{margin-left:0;width:100%;justify-content:space-between}}
 /* ===== barnläge ===== */
 .kidhome,.remo{display:none}
 .modebtn{white-space:nowrap}
@@ -862,6 +865,7 @@ a.chipbtn,a.btn{text-decoration:none;display:inline-flex;align-items:center;just
       <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#s-sagotid"/></svg>Sagoverkstaden
     </button>
     <nav class="nav" aria-label="Huvudmeny">
+      <button class="chipbtn ib homebtn" id="homeBtn" aria-label="Hem"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9.5h4.5v-5h3v5H18V10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg><span class="hl">Hem</span></button>
       <button class="chipbtn modebtn" id="modeBtn" aria-label="Byt mellan barn- och vuxenläge"></button>
       <button class="chipbtn" id="aiBtn" hidden aria-label="AI-inställningar">⚙</button>
       <button class="chipbtn" data-go="bygg">Ny saga</button>
@@ -911,7 +915,7 @@ a.chipbtn,a.btn{text-decoration:none;display:inline-flex;align-items:center;just
 
     <section id="v-read" hidden>
       <div class="rbar">
-        <button class="chipbtn ib" id="rBack" aria-label="Stäng boken"><svg class="bi" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="blab">Stäng</span></button>
+        <button class="chipbtn ib" id="rBack" aria-label="Hem"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9.5h4.5v-5h3v5H18V10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg><span class="blab">Hem</span></button>
         <div class="t" id="rTitle"></div>
         <button class="chipbtn ib readbtn" id="rRead"></button>
         <button class="chipbtn ib" id="rLang" aria-label="Byt språk"><span class="lflag" id="rLangF">🇸🇪</span><span class="blab" id="rLangL">Språk</span></button>
@@ -951,7 +955,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v29 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v30 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1359,11 +1363,15 @@ const VIEWS={home:'#v-home',bygg:'#v-build',gen:'#v-gen',read:'#v-read',hyllan:'
 function show(v,push=true){
   if(v!=='read')Voice.stop();
   S.view=v;for(const[k,sel]of Object.entries(VIEWS))$(sel).hidden=k!==v;document.body.classList.toggle('reading',v==='read');
-  document.querySelectorAll('.nav .chipbtn').forEach(b=>b.setAttribute('aria-current',b.dataset.go===v?'page':'false'));
+  document.querySelectorAll('.nav .chipbtn').forEach(b=>b.setAttribute('aria-current',(b.dataset.go||(b.id==='homeBtn'?'home':''))===v?'page':'false'));
   if(push&&['home','bygg','hyllan','barnen'].includes(v)){try{history.replaceState(null,'',v==='home'?location.pathname+location.search:'#'+v)}catch(e){}}
   if(v==='home')renderHome();if(v==='bygg')renderBuild();if(v==='hyllan')renderLib();if(v==='barnen')renderKids();
   window.scrollTo({top:0});
 }
+/* hem: stäng allt som är öppet och gå till startsidan */
+function goHome(){try{Voice.stop()}catch(e){}if(S.view==='gen'){GEN.toHome=true;try{GEN.ctl&&GEN.ctl.abort()}catch(e){}}clearInterval(GEN.timer);
+  try{if($('#modal .studio'))closeStudio()}catch(e){}$('#modal').innerHTML='';document.querySelectorAll('.svbridge').forEach(x=>x.remove());show('home')}
+document.addEventListener('click',e=>{if(e.target.closest('#homeBtn')){goHome();return}});
 document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){e.preventDefault();show(g.dataset.go)}});
 addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(['bygg','hyllan','barnen'].includes(h))show(h,false)});
 
@@ -1644,7 +1652,7 @@ async function startStory(o){
       try{const st2=normalize(await smp.json(buildPrompt(c)+`\n\nVIKTIGT: Förra försöket blev för kort. Skriv ALLA ${c.pages} sidorna, hela vägen till slutet.`,opts),c);if(st2.pages.length>st.pages.length)st=st2}catch(e){if(e&&e.code==='cancelled')throw e}}
     await progFinish();finishStory(st);
   }catch(e){
-    if(e&&e.code==='cancelled'){show('bygg');return}
+    if(e&&e.code==='cancelled'){if(GEN.toHome){GEN.toHome=false;return}show('bygg');return}
     const code=e&&e.code;
     if(code==='no_provider'&&window.SV_AI){show('bygg');SV_AI.open(()=>startStory(o),'Välj vilken AI som ska skriva sagorna.');return}
     if(['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(code)){finishStory(offlineStory(c),'AI:n fick inte skriva den här gången, så här kommer en enklare saga.');return}
@@ -1821,7 +1829,7 @@ function flip(dir){
 }
 $('#rNext').onclick=()=>{Voice.stop();flip(1)};
 $('#rPrev').onclick=()=>{Voice.stop();flip(-1)};
-$('#rBack').onclick=()=>show(isSaved(RD.st)?'hyllan':'home');
+$('#rBack').onclick=()=>goHome();
 document.addEventListener('keydown',e=>{if(S.view!=='read'||e.target.closest('input,textarea,select'))return;if(e.key==='ArrowRight'){Voice.stop();flip(1)}if(e.key==='ArrowLeft'){Voice.stop();flip(-1)}});
 let tx=null;$('#book').addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
 $('#book').addEventListener('touchend',e=>{if(tx==null)return;const dx=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(dx)>55){Voice.stop();flip(dx<0?1:-1)}});
