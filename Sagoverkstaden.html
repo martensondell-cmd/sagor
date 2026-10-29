@@ -239,7 +239,7 @@ async function open(after,why){onDone=after||null;const c=cfg();const m=document
   const opt=(k,label,extra)=>`<label class="aiopt ${c.engine===k||(!c.engine&&k==='none')?'on':''}"><input type="radio" name="aieng" value="${k}" ${c.engine===k||(!c.engine&&k==='none')?'checked':''}><span><b>${label}</b>${extra?`<small>${extra}</small>`:''}</span></label>`;
   const keyRow=(k,ph)=>`<div class="aikey" data-for="${k}"><input type="password" id="k-${k}" value="${esc(c[k+'Key']||'')}" placeholder="${ph}" autocomplete="off" spellcheck="false"><a href="${ENGINES[k].keyUrl}" target="_blank" rel="noopener">Skaffa nyckel</a></div>`;
   m.innerHTML=`<div class="mback" role="dialog" aria-modal="true" aria-labelledby="aih"><div class="sheet aisheet">
-    <div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2 id="aih">AI-inställningar</h2><p class="mini">${esc(why||'Välj vem som skriver och översätter sagorna.')}</p></div><button class="chipbtn" id="aiClose">Stäng</button></div>
+    <div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2 id="aih">AI-inställningar</h2><p class="mini">${esc(why||'Välj vem som skriver och översätter sagorna.')}</p></div><span style="display:flex;gap:6px"><button class="chipbtn" id="aiSound">🔊 Ljud & röst</button><button class="chipbtn" id="aiClose">Stäng</button></span></div>
     <div class="aiopts">
       ${opt('none','Appens egen sagomotor (rekommenderas)','Allt sker i appen – ingen AI, inget konto, inget internet behövs. Sagorna blir enklare men nya varje gång.')}
       ${opt('auto','Automatiskt med AI','Gratis-AI utan konto, eller en nyckel om du lagt in en. Kräver internet.')}
@@ -267,6 +267,7 @@ async function open(after,why){onDone=after||null;const c=cfg();const m=document
   m.onchange=async e=>{if(e.target.name==='aieng'){m.querySelectorAll('.aiopt').forEach(l=>l.classList.toggle('on',l.contains(e.target)))}
     if(e.target.id==='aiImport'&&e.target.files[0]){const p=document.getElementById('aiProg');try{await importAll(e.target.files[0]);p.textContent='Bokhyllan är inläst. Sidan laddas om …';setTimeout(()=>location.reload(),900)}catch(er){p.textContent='Filen gick inte att läsa.'}}};
   m.onclick=async e=>{const t=e.target,p=document.getElementById('aiProg');
+    if(t.id==='aiSound'){m.innerHTML='';onDone=null;try{openVoices()}catch(e){}return}
     if(t.id==='aiClose'||t.classList.contains('mback')){m.innerHTML='';onDone=null;return}
     if(t.id==='aiExport'){p.textContent='Sparar …';try{await exportAll();p.textContent='Klart.'}catch(er){p.textContent='Det gick inte att spara.'}return}
     if(t.id==='aiTest'||t.id==='aiSave'){let n;try{n=read()}catch(er){p.textContent=er.message;return}
@@ -942,7 +943,7 @@ button,a,.tile,.rib,.chipbtn,.btn,.round{touch-action:manipulation}
     <nav class="nav" aria-label="Huvudmeny">
       <button class="chipbtn ib homebtn" id="homeBtn" aria-label="Hem"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9.5h4.5v-5h3v5H18V10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg><span class="hl">Hem</span></button>
       <button class="chipbtn modebtn" id="modeBtn" aria-label="Byt mellan barn- och vuxenläge"></button>
-      <button class="chipbtn" id="aiBtn" hidden aria-label="AI-inställningar">⚙</button>
+      <button class="chipbtn" id="aiBtn" aria-label="Inställningar">⚙</button>
       <button class="chipbtn" data-go="bygg">Ny saga</button>
       <button class="chipbtn" data-go="hyllan">Bokhyllan</button>
       <button class="chipbtn" data-go="barnen">Barnen</button>
@@ -1031,7 +1032,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v41 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v42 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1590,6 +1591,9 @@ const KID={on:LS.get('kidMode',true),
     h.addEventListener('pointerdown',down);['pointerup','pointerleave','pointercancel'].forEach(ev=>h.addEventListener(ev,up));h.addEventListener('contextmenu',e=>e.preventDefault());
     m.onclick=e=>{if(e.target.id==='gateNo'||e.target.classList.contains('mback'))m.innerHTML=''};m.onchange=null}};
 $('#modeBtn').onclick=()=>{if(KID.on)KID.gate();else{KID.set(true);toast('Barnläge 🧒')}};
+/* ⚙ syns alltid: ljud och röst (i den fristående appen även AI-val). I barnläget via vuxenspärren. */
+{const g=$('#aiBtn');g.hidden=false;g.setAttribute('aria-label','Inställningar');g.title='Inställningar';
+  g.onclick=()=>{const go=()=>{Voice.stop();openVoices()};if(KID.on)KID.gate(go);else go()}}
 document.body.classList.toggle('kid',KID.on);KID.btn();
 
 /* ============ namn: rätta stora och små bokstäver ============ */
@@ -2178,7 +2182,7 @@ const LT={ac:null,
   t8(){Unlock.start();setTimeout(()=>{this.t1();setTimeout(()=>this.r(8,document.getElementById('lt-1').textContent),500)},300)},
   diag(){let all=0,sv=0;try{const v=speechSynthesis.getVoices();all=v.length;sv=v.filter(x=>/^sv/i.test(x.lang)).length}catch(e){}const os=(navigator.userAgent.match(/(iPhone OS [\d_]+|iPad; CPU OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0].replace(/_/g,'.');return `Talsyntes: ${'speechSynthesis' in window?'finns':'saknas'} · röster: ${all} (svenska: ${sv}) · ${os}`}
 };
-function soundTestHTML(){return `<details class="ltest"><summary>Hör du inget?</summary><ol class="mini sthelp"><li>Höj volymen.</li><li>På iPhone: slå av ljudlöst-knappen på sidan av telefonen.</li><li>Tryck här och lyssna: <button class="kc" data-lt="7">Testa ljudet</button> <span class="mini" id="lt-7"></span></li></ol></details>`}
+function soundTestHTML(){return `<details class="ltest"><summary>Hör du inget? <small style="opacity:.6">(v42)</small></summary><ol class="mini sthelp"><li>Höj volymen.</li><li>På iPhone: slå av ljudlöst-knappen på sidan av telefonen.</li><li>Tryck här och lyssna: <button class="kc" data-lt="7">Testa ljudet</button> <span class="mini" id="lt-7"></span></li></ol></details>`}
 
 /* ============ film export ============ */
 const FW=1080,FH=1350,IX=60,IY=60,IW=960,IH=720;
@@ -2554,14 +2558,39 @@ const Rec={a:null,on:false,b:[],tr:null,trSt:null,pr:null,ok:false,
      när sagan öppnas, och spelaren startas synkront (med tyst ljud om spåret inte hunnit bli klart). */
   el(){const a=this.a=this.a||new Audio();a.setAttribute('playsinline','');a.preload='auto';return a},
   sig(st){return JSON.stringify([st.id,curLang&&curLang(),st.audio&&(st.audio.id||st.audio.asset||st.audio.dur),st.pageAudio||null])},
-  prep(st){if(!hasRec(st))return Promise.resolve(null);const sg=this.sig(st);if(this.trSt===st&&this.sg===sg&&this.pr)return this.pr;
+  pages:{},
+  /* egen röst: varje sida spelas som ett eget ljud, precis som Lyssna i studion */
+  prepOwn(st){const pa=st.pageAudio||{};Object.keys(pa).forEach(k=>{const c=pa[k];if(!c||this.pages[c.id])return;
+      fetchClip(c.id).then(pcm=>{this.pages[c.id]=URL.createObjectURL(wavBlob(pcm,SR))}).catch(()=>{})})},
+  async pageURL(c){if(this.pages[c.id])return this.pages[c.id];const pcm=await fetchClip(c.id);return this.pages[c.id]=URL.createObjectURL(wavBlob(pcm,SR))},
+  startOwn(st){
+    Unlock.start();
+    this.on=true;this.own=true;$('#rRead').classList.add('on');$('#rRead').innerHTML=RB(true);$('#lisbar').hidden=false;$('#rPg').hidden=true;$('#lisTxt').textContent='Din röst läser';
+    try{if(navigator.wakeLock)navigator.wakeLock.request('screen').then(w=>{this.wl=w}).catch(()=>{})}catch(e){}
+    const n=nSheets(),run=++this.run;
+    const next=async i=>{if(!this.on||this.run!==run)return;if(i>=n-1||i>=n){this.stop();toast('Slut på sagan. God natt!');return}
+      if(RD.i!==i+1)await flip(1);if(!this.on||this.run!==run)return;play(RD.i)};
+    const play=(i,first)=>{const c=(st.pageAudio||{})[i];
+      if(!c){const secs=i===0?1.2:Math.min(9,Math.max(3,((st.pages[i-1]||{}).text||'').length/15));this.tm=setTimeout(()=>next(i),secs*1000);return}
+      const go=url=>{a.onended=()=>{if(this.run===run)setTimeout(()=>next(i),600)};a.src=url;
+        let p;try{p=a.play()}catch(e){p=Promise.reject(e)}
+        p.catch(e=>{DBG.log('egen röst play: '+(e&&e.name));if(this.run===run&&this.on){this.stop();needTap()}})};
+      if(this.pages[c.id])go(this.pages[c.id]);else this.pageURL(c).then(u=>{if(this.on&&this.run===run)go(u)}).catch(()=>next(i))};
+    /* ett och samma ljudelement för hela sagan: det låses upp i trycket och byter sedan bara ljud mellan sidorna */
+    const a=this.el();a.muted=false;a.volume=1;a.onended=null;a.ontimeupdate=null;
+    const c0=(st.pageAudio||{})[RD.i];
+    if(!(c0&&this.pages[c0.id])){a.src=silentWavURL();try{const q=a.play();if(q&&q.catch)q.catch(()=>{})}catch(e){}}
+    play(RD.i,true);
+  },
+  prep(st){if(!hasRec(st))return Promise.resolve(null);if(hasOwn(st)){this.prepOwn(st);return Promise.resolve(null)}const sg=this.sig(st);if(this.trSt===st&&this.sg===sg&&this.pr)return this.pr;
     this.trSt=st;this.sg=sg;this.tr=null;const pr=this.pr=storyTrack(st).then(tr=>{if(this.pr===pr)this.tr=tr;return tr}).catch(e=>{if(this.pr===pr)this.pr=null;throw e});
     pr.catch(()=>{});return pr},
   /* Spelas exakt som Lyssna i inspelningsstudion (som hörs på iPhone): ljudlåset startas i trycket
      och ett nytt ljudelement skapas för varje uppspelning. */
   start(){
     const st=RD.st;if(!hasRec(st))return;Voice.stop();try{speechSynthesis.cancel()}catch(e){}
-    Unlock.start();
+    if(hasOwn(st))return this.startOwn(st);
+    this.own=false;Unlock.start();
     try{if(this.a){this.a.onended=null;this.a.ontimeupdate=null;this.a.pause()}}catch(e){}
     const mk=url=>{const a=new Audio(url);a.setAttribute('playsinline','');a.preload='auto';this.a=a;let p;try{p=a.play()}catch(e){p=Promise.reject(e)}return p};
     const ready=this.trSt===st&&this.sg===this.sig(st)&&this.tr;
@@ -2581,7 +2610,7 @@ const Rec={a:null,on:false,b:[],tr:null,trSt:null,pr:null,ok:false,
       a.onended=()=>{if(this.a===a){this.stop();toast('Slut på sagan. God natt!')}};
     };go();
   },
-  stop(){Keep.stop();if(!this.on)return;this.on=false;try{this.a.pause()}catch(e){}$('#rRead').classList.remove('on');$('#rRead').innerHTML=RB(false);$('#lisbar').hidden=true;$('#rPg').hidden=false}
+  stop(){Keep.stop();clearTimeout(this.tm);this.run=(this.run||0)+1;try{this.wl&&this.wl.release()}catch(e){}this.wl=null;if(!this.on)return;this.on=false;try{this.a.pause()}catch(e){}$('#rRead').classList.remove('on');$('#rRead').innerHTML=RB(false);$('#lisbar').hidden=true;$('#rPg').hidden=false}
 };
 function applyAudioTiming(F,st,dur,bounds){
   const b=(bounds?bounds.slice():sheetBounds(st,dur));b.push(dur);
