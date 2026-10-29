@@ -279,7 +279,30 @@ async function open(after,why){onDone=after||null;const c=cfg();const m=document
       catch(er){p.innerHTML='<b class="bad">Fungerar inte än:</b> '+esc(er.code==='bad_key'?'nyckeln godtogs inte.':er.code==='rate_limited'?'tjänsten säger att kvoten är slut just nu.':String(er.message||er.code||er).slice(0,200))}
       finally{t.disabled=false}}};
 }
-window.SV_AI={open,elFile:async id=>{const j=EL_JOBS[id];return new File([j.blob],'berattarrost.mp3',{type:'audio/mpeg'})},elVoices,pickEngine,ENGINES,kv};
+/* ---------- guide: lägg appen på hemskärmen ---------- */
+let BIP=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();BIP=e;const b=document.getElementById('insAndroid');if(b)b.hidden=false});
+function isInstalled(){return navigator.standalone===true||matchMedia('(display-mode: standalone)').matches}
+function installGuide(force){
+  if(!/^https?:/.test(location.protocol))return;if(isInstalled())return;
+  const mobileUA=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  if(!force&&(!mobileUA||localStorage.getItem('sv:installSeen')))return;
+  const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),inApp=/FBAN|FBAV|Instagram|Line\/|GSA\/|Messenger|WhatsApp/i.test(navigator.userAgent);
+  const shareIc='<svg viewBox="0 0 24 24" width="22" height="22" style="vertical-align:-5px"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="5" y="10" width="14" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>';
+  const ov=document.createElement('div');ov.className='mback insguide';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');
+  ov.innerHTML=`<div class="sheet" style="width:min(440px,100%);text-align:center;align-items:center">
+    <img src="icon-192.png" alt="" width="84" height="84" style="border-radius:20px" onerror="this.remove()">
+    <h2>Lägg Sagoverkstaden på hemskärmen</h2>
+    <p class="mini">Då öppnas den som en vanlig app, och era sagor sparas i telefonen.</p>
+    ${inApp?'<p class="note"><b>Öppna först länken i Safari</b> (tryck på ••• eller kompassen och välj Öppna i Safari).</p>':''}
+    ${ios?`<ol class="insteps"><li><b>1</b><span>Tryck på <b>Dela</b> ${shareIc} i Safari. På nyare iPhone ligger den under <b>•••</b> nere till höger.</span></li><li><b>2</b><span>Välj <b>Lägg till på hemskärmen</b>. Syns den inte: tryck <b>Visa fler</b>.</span></li><li><b>3</b><span>Tryck <b>Lägg till</b>. Klart – öppna appen från hemskärmen!</span></li></ol><div class="insarrow" aria-hidden="true">⬇️</div>`
+      :`<button class="btn" id="insAndroid" ${BIP?'':'hidden'}>📲 Installera appen</button><ol class="insteps"><li><b>1</b><span>Tryck på menyn <b>⋮</b> uppe till höger i Chrome.</span></li><li><b>2</b><span>Välj <b>Lägg till på startskärmen</b> eller <b>Installera app</b>.</span></li></ol>`}
+    <button class="chipbtn" id="insLater">Fortsätt i webbläsaren</button></div>`;
+  document.body.appendChild(ov);
+  ov.onclick=async e=>{const t=e.target.closest('button');if(!t)return;if(t.id==='insLater'){localStorage.setItem('sv:installSeen','1');ov.remove()}
+    if(t.id==='insAndroid'&&BIP){BIP.prompt();try{const r=await BIP.userChoice;if(r.outcome==='accepted'){localStorage.setItem('sv:installSeen','1');ov.remove()}}catch(er){}}};
+}
+document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>installGuide(false),900));
+window.SV_AI={open,installGuide,elFile:async id=>{const j=EL_JOBS[id];return new File([j.blob],'berattarrost.mp3',{type:'audio/mpeg'})},elVoices,pickEngine,ENGINES,kv};
 document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('aiBtn');if(b){b.hidden=false;b.onclick=()=>open()}
   const st=document.createElement('style');st.textContent=`.aiopts{display:flex;flex-direction:column;gap:6px}
 .aiopt{display:flex;gap:10px;align-items:flex-start;border:2.5px solid var(--edge);border-radius:14px;padding:8px 10px;cursor:pointer;background:#fff}
@@ -287,7 +310,11 @@ document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementByI
 .aiopt b{font-family:var(--f-display);display:block}.aiopt small{display:block;color:var(--ink-soft);font-size:.8rem;line-height:1.35}
 .aikey{display:none;gap:8px;align-items:center;margin:-2px 0 4px 30px}.aikey input{flex:1;min-width:0}.aikey a{font-size:.85rem;font-weight:700;color:var(--ink);white-space:nowrap}
 .aiopt.on+.aikey,.aimore .aikey{display:flex}
-.svbridge{z-index:120}.bapps{display:grid;grid-template-columns:1fr 1fr;gap:8px}.bapps .btn{padding:.5em .6em}.svbridge textarea{width:100%;box-sizing:border-box;font-size:.85rem}.aimore .aikey{margin:8px 0}.aimore summary{font-family:var(--f-display);font-weight:800;cursor:pointer}`;document.head.appendChild(st)});
+.svbridge{z-index:120}.insguide{z-index:130}
+.insteps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;text-align:left;width:100%}
+.insteps li{display:flex;gap:10px;align-items:flex-start;background:var(--pick-soft);border-radius:14px;padding:10px 12px;font-size:1rem;line-height:1.4}
+.insteps li>b{flex:none;display:inline-grid;place-items:center;width:1.7em;height:1.7em;border-radius:50%;background:var(--pick);border:2px solid var(--ink)}
+.insarrow{font-size:2rem;animation:bob 1.6s ease-in-out infinite}.bapps{display:grid;grid-template-columns:1fr 1fr;gap:8px}.bapps .btn{padding:.5em .6em}.svbridge textarea{width:100%;box-sizing:border-box;font-size:.85rem}.aimore .aikey{margin:8px 0}.aimore summary{font-family:var(--f-display);font-weight:800;cursor:pointer}`;document.head.appendChild(st)});
 })();
 
 </script>
