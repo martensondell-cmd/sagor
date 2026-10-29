@@ -120,7 +120,7 @@ const ENGINES={
       for await(const x of ch){const d=x.choices&&x.choices[0]&&x.choices[0].delta&&x.choices[0].delta.content;if(d){all+=d;o.onText&&o.onText({text:all})}}return all}}
 };
 /* vilka motorer som provas, i ordning; 'bridge' sist som reserv */
-async function chain(){const c=cfg();const want=c.engine||'auto';
+async function chain(){const c=cfg();const want=c.engine||'none';
   if(want==='none')return[];
   if(want==='bridge')return['bridge'];
   if(want!=='auto'){const e=ENGINES[want];if(!e)return[];if(e.key&&!c[want+'Key'])return[];return want==='free'?['free','bridge']:[want]}
@@ -178,12 +178,12 @@ function waitNote(sec){const t='Gratis-AI:n har kö – fortsätter om '+sec+' s
 async function runEngine(k,input,opts){try{return await ENGINES[k].run(input,Object.assign({onWait:waitNote},opts),cfg())}
   catch(e){if(e&&e.name==='AbortError')throw{code:'cancelled'};if(e&&e.code)throw e;throw{code:'tool_error',message:String(e&&e.message||e)}}}
 async function sample(input,opts){opts=opts||{};const ks=(await chain()).filter(k=>k!=='bridge');
-  if(!ks.length)throw cfg().engine==='none'?{code:'not_granted',message:'Ingen AI'}:{code:'bridge_plain',message:'Den här delen görs utan AI'};
+  if(!ks.length)throw (cfg().engine||'none')==='none'?{code:'not_granted',message:'Ingen AI'}:{code:'bridge_plain',message:'Den här delen görs utan AI'};
   let last;for(const k of ks){try{return{text:await runEngine(k,input,opts),truncated:false,engine:k}}catch(e){if(e.code==='cancelled')throw e;last=e}}
   throw last}
 const BRIDGE_TAIL='\n\nSvara ENDAST med giltig JSON i ett enda kodblock (```json … ```), utan någon annan text.';
 sample.json=async(input,opts)=>{opts=opts||{};const ks=await chain();
-  if(!ks.length)throw cfg().engine==='none'?{code:'not_granted',message:'Ingen AI'}:{code:'no_provider',message:'Ingen AI vald'};
+  if(!ks.length)throw (cfg().engine||'none')==='none'?{code:'not_granted',message:'Ingen AI'}:{code:'no_provider',message:'Ingen AI vald'};
   const ask=(typeof input==='string'?input:msgs(input).map(m=>m.content).join('\n\n'))+'\n\nSvara endast med giltig JSON, utan förklaringar och utan kodblock.';
   let last;
   for(const k of ks){
@@ -236,12 +236,13 @@ let onDone=null;
 async function open(after,why){onDone=after||null;const c=cfg();const m=document.getElementById('modal');
   const bi=await ENGINES.builtin.status(),wg=await ENGINES.webllm.status();
   const stTxt={available:'finns på datorn',downloadable:'kan laddas ner (gratis)',downloading:'laddas ner …',unavailable:'stöds inte här',saknas:'finns inte i den här webbläsaren',tillgänglig:c.webllmReady?'nedladdad':'kan laddas ner (gratis)'};
-  const opt=(k,label,extra)=>`<label class="aiopt ${c.engine===k||(!c.engine&&k==='auto')?'on':''}"><input type="radio" name="aieng" value="${k}" ${c.engine===k||(!c.engine&&k==='auto')?'checked':''}><span><b>${label}</b>${extra?`<small>${extra}</small>`:''}</span></label>`;
+  const opt=(k,label,extra)=>`<label class="aiopt ${c.engine===k||(!c.engine&&k==='none')?'on':''}"><input type="radio" name="aieng" value="${k}" ${c.engine===k||(!c.engine&&k==='none')?'checked':''}><span><b>${label}</b>${extra?`<small>${extra}</small>`:''}</span></label>`;
   const keyRow=(k,ph)=>`<div class="aikey" data-for="${k}"><input type="password" id="k-${k}" value="${esc(c[k+'Key']||'')}" placeholder="${ph}" autocomplete="off" spellcheck="false"><a href="${ENGINES[k].keyUrl}" target="_blank" rel="noopener">Skaffa nyckel</a></div>`;
   m.innerHTML=`<div class="mback" role="dialog" aria-modal="true" aria-labelledby="aih"><div class="sheet aisheet">
     <div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2 id="aih">AI-inställningar</h2><p class="mini">${esc(why||'Välj vem som skriver och översätter sagorna.')}</p></div><button class="chipbtn" id="aiClose">Stäng</button></div>
     <div class="aiopts">
-      ${opt('auto','Automatiskt – gratis (rekommenderas)','Skriver direkt i appen med gratis-AI utan konto. Har du lagt in en nyckel används den först.')}
+      ${opt('none','Appens egen sagomotor (rekommenderas)','Allt sker i appen – ingen AI, inget konto, inget internet behövs. Sagorna blir enklare men nya varje gång.')}
+      ${opt('auto','Automatiskt med AI','Gratis-AI utan konto, eller en nyckel om du lagt in en. Kräver internet.')}
       ${opt('free','Gratis-AI utan konto',ENGINES.free.note)}
       ${opt('bridge','Din egen AI-app','ChatGPT, Claude, Gemini eller Copilot som du redan har. Frågan kopieras dit och du klistrar in svaret här.')}
       ${opt('gemini','Google Gemini – gratis nyckel','Skrivs direkt i appen utan klipp och klistra. Nyckeln är gratis med ett Google-konto.')}${keyRow('gemini','Gemini-nyckel (AIza…)')}
@@ -249,7 +250,7 @@ async function open(after,why){onDone=after||null;const c=cfg();const m=document
       ${opt('openai','ChatGPT (OpenAI)',ENGINES.openai.note)}${keyRow('openai','OpenAI-nyckel (sk-…)')}
       ${opt('builtin','Inbyggd AI i Chrome/Edge','Lokalt och gratis – '+(stTxt[bi]||bi)+'. Svenska stöds ännu inte officiellt.')}
       ${opt('webllm','Lokal AI-modell i webbläsaren','Lokalt och gratis – '+(stTxt[wg]||wg)+'. Stor nedladdning första gången.')}
-      ${opt('none','Ingen AI','Enklare sagor från den inbyggda sagomotorn')}
+
     </div>
 
     <details class="aimore"><summary>Riktiga berättarröster (ElevenLabs) och bokhyllan</summary>
@@ -260,7 +261,7 @@ async function open(after,why){onDone=after||null;const c=cfg();const m=document
     <p class="mini stmsg" id="aiProg" aria-live="polite"></p>
     <div class="row" style="justify-content:flex-end"><button class="btn sec" id="aiTest">Testa</button><button class="btn" id="aiSave">${onDone?'Spara och skriv sagan':'Spara'}</button></div>
   </div></div>`;
-  const read=()=>{const n=cfg();n.engine=(m.querySelector('[name=aieng]:checked')||{}).value||'auto';['gemini','claude','openai','eleven'].forEach(k=>{const el=document.getElementById('k-'+k);if(el)n[k+'Key']=el.value.trim()});
+  const read=()=>{const n=cfg();n.engine=(m.querySelector('[name=aieng]:checked')||{}).value||'none';['gemini','claude','openai','eleven'].forEach(k=>{const el=document.getElementById('k-'+k);if(el)n[k+'Key']=el.value.trim()});
     if(n.engine!=='auto'&&ENGINES[n.engine]&&ENGINES[n.engine].key&&!n[n.engine+'Key']){const el=document.getElementById('k-'+n.engine);if(el)el.focus();throw new Error('Skriv in nyckeln för '+ENGINES[n.engine].label+'.')}
     ['gemini','claude','openai'].forEach(k=>{if(n[k+'Key']!==c[k+'Key'])ENGINES[k]._m=null});saveCfg(n);return n};
   m.onchange=async e=>{if(e.target.name==='aieng'){m.querySelectorAll('.aiopt').forEach(l=>l.classList.toggle('on',l.contains(e.target)))}
@@ -302,7 +303,7 @@ function installGuide(force){
     if(t.id==='insAndroid'&&BIP){BIP.prompt();try{const r=await BIP.userChoice;if(r.outcome==='accepted'){localStorage.setItem('sv:installSeen','1');ov.remove()}}catch(er){}}};
 }
 document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>installGuide(false),900));
-window.SV_AI={open,installGuide,elFile:async id=>{const j=EL_JOBS[id];return new File([j.blob],'berattarrost.mp3',{type:'audio/mpeg'})},elVoices,pickEngine,ENGINES,kv};
+window.SV_AI={open,installGuide,localOnly:()=>(cfg().engine||'none')==='none',elFile:async id=>{const j=EL_JOBS[id];return new File([j.blob],'berattarrost.mp3',{type:'audio/mpeg'})},elVoices,pickEngine,ENGINES,kv};
 document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('aiBtn');if(b){b.hidden=false;b.onclick=()=>open()}
   const st=document.createElement('style');st.textContent=`.aiopts{display:flex;flex-direction:column;gap:6px}
 .aiopt{display:flex;gap:10px;align-items:flex-start;border:2.5px solid var(--edge);border-radius:14px;padding:8px 10px;cursor:pointer;background:#fff}
@@ -985,7 +986,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v34 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v35 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1756,6 +1757,8 @@ async function startStory(o){
   show('gen');
   $('#genArt').innerHTML=scene({scene:c.scenes[0],cast:c.cast.slice(0,3),time:'dag',action:'jakt'});
   genStatus('think');
+  if(window.SV_AI&&SV_AI.localOnly&&SV_AI.localOnly()){progStart({...c,wpp:4,pages:c.pages});const ctl=new AbortController();GEN.ctl=ctl;
+    await new Promise(r=>setTimeout(r,1400));if(ctl.signal.aborted)return;await progFinish();finishStory(offlineStory(c));return}
   const smp=SAMPLE||await Promise.race([sampleP,new Promise(r=>setTimeout(()=>r(null),2500))]);
   if(!smp){finishStory(offlineStory(c),'Den här sagan skrevs utan AI.');return}
   const ctl=new AbortController();GEN.ctl=ctl;
@@ -1845,7 +1848,7 @@ async function switchLang(st,L){
   st.tr=st.tr||{};if(!st.tr.sv&&(st.lang||'sv')==='sv')st.tr.sv=textsOf(st);
   if(!st.tr[L]){
     $('#modal').innerHTML=`<div class="mback" role="dialog" aria-modal="true" aria-labelledby="lgh"><div class="sheet" style="width:min(420px,100%)"><h2 id="lgh">${LANG[L].f} Översätter till ${LANG[L].n.toLowerCase()} …</h2><div class="pbar"><i id="lgProg" style="width:4%"></i></div><p class="mini">AI:n skriver om sagan. Det tar en liten stund.</p></div></div>`;
-    try{st.tr[L]=await translateStory(st,L)}catch(e){$('#modal').innerHTML='';if(e&&e.code==='no_provider'&&window.SV_AI){SV_AI.open(null,'Välj en AI för att översätta sagan.');return false}toast(e&&e.code==='nosample'?'Översättning kräver att Claude kan nås här.':'Översättningen misslyckades. Försök igen.');return false}
+    try{st.tr[L]=await translateStory(st,L)}catch(e){$('#modal').innerHTML='';if(e&&e.code==='not_granted'&&window.SV_AI){toast('Översättning kräver en AI. Välj en under ⚙ i vuxenläge.');return false}if(e&&e.code==='no_provider'&&window.SV_AI){SV_AI.open(null,'Välj en AI för att översätta sagan.');return false}toast(e&&e.code==='nosample'?'Översättning kräver att Claude kan nås här.':'Översättningen misslyckades. Försök igen.');return false}
     $('#modal').innerHTML='';
   }
   applyLang(st,L);LS.set('lang',L);
