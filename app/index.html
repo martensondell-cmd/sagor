@@ -998,7 +998,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v37 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v38 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1888,7 +1888,8 @@ function openReader(st,noAuto){
   applyWall(themeKey(st.themes));show('read');
   $('#rTitle').textContent=st.title+(st.series&&st.series.ep>1?` · Del ${st.series.ep}`:'');
   renderSheet();updFav();updVoiceBtn();updLangBtn();
-  if(!noAuto&&LS.get('autoRead',true))setTimeout(autoRead,450);
+  if(hasRec(st))Rec.prep(st);
+  if(!noAuto&&LS.get('autoRead',true)){if(prefRec(st))autoRead();else setTimeout(autoRead,450)}
   else if(!LS.get('coachRead',false)){LS.set('coachRead',true);setTimeout(()=>toast('Bläddra med pilen ▶ – eller tryck Läs upp så läses sagan högt.'),700)}
 }
 const nSheets=()=>RD.st.pages.length+2;
@@ -2069,9 +2070,11 @@ const Voice={on:false,ok:'speechSynthesis' in window,all:[],get list(){const re=
 Voice.load();
 $('#lisStop').onclick=()=>Voice.stop();
 $('#rRead').onclick=()=>{$('#rRead').classList.remove('pulse');if(Voice.on||Rec.on){Voice.stop();return}
+  if(RD.st&&prefRec(RD.st))return Rec.start();
   try{if('speechSynthesis' in window&&(speechSynthesis.speaking||speechSynthesis.pending)){speechSynthesis.cancel();setTimeout(autoRead,300);return}}catch(e){}
   autoRead()};
-function autoRead(){if(!RD.st||S.view!=='read')return;if(hasOwn(RD.st)||(RD.st.audio&&LS.get('preferRec',true)))return Rec.start();Voice.start();
+const prefRec=st=>hasOwn(st)||!!(st&&st.audio&&LS.get('preferRec',true));
+function autoRead(){if(!RD.st||S.view!=='read')return;if(prefRec(RD.st))return Rec.start();Voice.start();
   const g=Voice.gen;setTimeout(()=>{if(Voice.on&&Voice.gen===g&&!Voice.heard){Voice.stop();needTap()}},2600)}
 /* När en ny saga ska skrivas säger rösten något direkt i trycket. Då har iPhone fått ett riktigt
    tal startat av användaren, och uppläsningen får sedan starta av sig själv när sagan är klar. */
@@ -2507,18 +2510,33 @@ async function audioURL(st){
 }
 function sheetWeights(st){return[st.title.length+(st.dedication||'').length+50,...st.pages.map(p=>p.text.length+45),60]}
 function sheetBounds(st,dur){const w=sheetWeights(st),tot=w.reduce((a,b)=>a+b,0);let acc=0;return w.map(x=>{const s=acc/tot*dur;acc+=x;return s})}
-const Rec={a:null,on:false,b:[],
-  async start(){
-    const st=RD.st;if(!hasRec(st))return;Voice.stop();Unlock.start();Keep.start();
-    let tr;try{tr=await storyTrack(st)}catch(e){toast('Inspelningen kunde inte laddas.');return}
-    const a=this.a=this.a||new Audio();a.setAttribute('playsinline','');a.src=tr.url;
-    await new Promise(r=>{if(a.readyState>=1)return r();a.onloadedmetadata=r;setTimeout(r,4000)});
-    this.b=tr.bounds;
-    try{a.currentTime=RD.i>0?this.b[RD.i]:0}catch(e){}
-    this.on=true;$('#rRead').classList.add('on');$('#rRead').innerHTML=RB(true);$('#lisbar').hidden=false;$('#rPg').hidden=true;$('#lisTxt').textContent=`${tr.label} läser`;
-    a.ontimeupdate=()=>{if(!this.on||RD.busy)return;const t=a.currentTime;let tgt=0;this.b.forEach((s,i)=>{if(t>=s-.05)tgt=i});if(tgt>RD.i)flip(1)};
-    a.onended=()=>{this.stop();toast('Slut på sagan. God natt!')};
-    try{await a.play()}catch(e){this.stop();needTap()}
+const Rec={a:null,on:false,b:[],tr:null,trSt:null,pr:null,ok:false,
+  /* iPhone: play() måste anropas direkt i trycket, innan något väntas in. Därför byggs spåret i förväg
+     när sagan öppnas, och spelaren startas synkront (med tyst ljud om spåret inte hunnit bli klart). */
+  el(){const a=this.a=this.a||new Audio();a.setAttribute('playsinline','');a.preload='auto';return a},
+  sig(st){return JSON.stringify([st.id,curLang&&curLang(),st.audio&&(st.audio.id||st.audio.asset||st.audio.dur),st.pageAudio||null])},
+  prep(st){if(!hasRec(st))return Promise.resolve(null);const sg=this.sig(st);if(this.trSt===st&&this.sg===sg&&this.pr)return this.pr;
+    this.trSt=st;this.sg=sg;this.tr=null;const pr=this.pr=storyTrack(st).then(tr=>{if(this.pr===pr)this.tr=tr;return tr}).catch(e=>{if(this.pr===pr)this.pr=null;throw e});
+    pr.catch(()=>{});return pr},
+  start(){
+    const st=RD.st;if(!hasRec(st))return;Voice.stop();try{speechSynthesis.cancel()}catch(e){}
+    const a=this.el(),ready=this.trSt===st&&this.sg===this.sig(st)&&this.tr;
+    a.onended=null;a.ontimeupdate=null;
+    a.src=ready?this.tr.url:silentWavURL();
+    let p;try{p=a.play()}catch(e){p=Promise.reject(e)}
+    Unlock.start();Keep.start();
+    this.on=true;$('#rRead').classList.add('on');$('#rRead').innerHTML=RB(true);$('#lisbar').hidden=false;$('#rPg').hidden=true;$('#lisTxt').textContent='Startar inspelningen…';
+    const go=async()=>{
+      try{await p;this.ok=true}catch(e){if(!this.on)return;this.stop();needTap();return}
+      let tr;try{tr=await this.prep(st)}catch(e){this.stop();toast('Inspelningen kunde inte laddas.');return}
+      if(!this.on||RD.st!==st)return;
+      if(a.src!==tr.url){a.src=tr.url;try{await a.play()}catch(e){if(this.on){this.stop();needTap()}return}}
+      this.b=tr.bounds;$('#lisTxt').textContent=`${tr.label} läser`;
+      const seek=()=>{try{const t=RD.i>0?this.b[RD.i]:0;if(Math.abs(a.currentTime-t)>.5)a.currentTime=t}catch(e){}};
+      if(a.readyState>=1)seek();else a.onloadedmetadata=seek;
+      a.ontimeupdate=()=>{if(!this.on||RD.busy)return;const t=a.currentTime;let tgt=0;this.b.forEach((s,i)=>{if(t>=s-.05)tgt=i});if(tgt>RD.i)flip(1)};
+      a.onended=()=>{this.stop();toast('Slut på sagan. God natt!')};
+    };go();
   },
   stop(){Keep.stop();if(!this.on)return;this.on=false;try{this.a.pause()}catch(e){}$('#rRead').classList.remove('on');$('#rRead').innerHTML=RB(false);$('#lisbar').hidden=true;$('#rPg').hidden=false}
 };
