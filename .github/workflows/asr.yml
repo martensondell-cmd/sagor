@@ -8,99 +8,75 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-      - name: Vad finns färdigt på Hugging Face?
+      - name: Allt i ett (loggas till asr-log)
+        shell: bash
         run: |
-          pip install -q huggingface_hub
-          python - <<'PY'
-          from huggingface_hub import list_repo_files, HfApi
-          api=HfApi()
-          for r in ['KBLab/kb-whisper-tiny','KBLab/kb-whisper-base','onnx-community/kb-whisper-tiny-ONNX','onnx-community/kb-whisper-base-ONNX']:
-              try: print(r, [f for f in list_repo_files(r)][:60])
-              except Exception as e: print(r,'saknas',type(e).__name__)
-          print([m.id for m in api.list_models(search='kb-whisper',limit=50)])
-          PY
-      - name: transformers.js och onnxruntime-web
-        run: |
-          mkdir -p work && cd work && npm init -y >/dev/null
-          npm i @huggingface/transformers@3.7.5 >/dev/null
-          ls node_modules/@huggingface/transformers/dist | head -50
-          ls -la node_modules/onnxruntime-web/dist | grep -E "wasm|mjs" | head -40
-          cat node_modules/onnxruntime-web/package.json | grep '"version"'
-      - name: Konvertera KB-whisper till ONNX (transformers.js-format)
-        run: |
-          git clone --depth 1 -b 3.7.5 https://github.com/huggingface/transformers.js tjs || git clone --depth 1 https://github.com/huggingface/transformers.js tjs
-          cd tjs
-          pip install -q -r scripts/requirements.txt
-          for m in KBLab/kb-whisper-tiny KBLab/kb-whisper-base; do
-            python -m scripts.convert --quantize --model_id $m --task automatic-speech-recognition-with-past || python -m scripts.convert --quantize --model_id $m
+          mkdir -p asr-log; L=asr-log/log.txt; : > $L
+          log(){ echo "=== $*" | tee -a $L; }
+          run(){ log "$*"; bash -c "$*" >> $L 2>&1; local r=$?; echo "--- exit $r" >> $L; return $r; }
+          run "pip install -q huggingface_hub 'optimum[onnxruntime]==1.24.0' 'transformers==4.48.3' onnx onnxruntime torch --extra-index-url https://download.pytorch.org/whl/cpu"
+          run "python -c \"from huggingface_hub import list_repo_files as l; [print(r, l(r)) for r in ['KBLab/kb-whisper-tiny','KBLab/kb-whisper-base']]\""
+          run "mkdir -p work && cd work && npm init -y >/dev/null && npm i @huggingface/transformers@3.7.5 node-wav >/dev/null && ls node_modules/@huggingface/transformers/dist && ls -la node_modules/onnxruntime-web/dist | grep -E 'wasm|mjs' && grep '\"version\"' node_modules/onnxruntime-web/package.json"
+          for m in tiny base; do
+            run "optimum-cli export onnx --model KBLab/kb-whisper-$m --task automatic-speech-recognition-with-past out/kb-whisper-$m" || true
+            run "ls -la out/kb-whisper-$m" || true
+            run "python - <<'PY'
+          import os,glob,shutil
+          from onnxruntime.quantization import quantize_dynamic, QuantType
+          d='out/kb-whisper-$m'
+          os.makedirs(d+'/onnx',exist_ok=True)
+          for n in ['encoder_model','decoder_model_merged','decoder_model','decoder_with_past_model']:
+              f=d+'/'+n+'.onnx'
+              if os.path.exists(f):
+                  quantize_dynamic(f, d+'/onnx/'+n+'_quantized.onnx', weight_type=QuantType.QUInt8, extra_options={'EnableSubgraph':True})
+                  print('kvantiserad',n, os.path.getsize(d+'/onnx/'+n+'_quantized.onnx'))
+          PY" || true
           done
-          find models -type f | xargs ls -la
-      - name: Svenska testljud (piper)
-        run: |
-          pip install -q piper-tts
-          mkdir -p voices test-audio
-          python - <<'PY'
-          from huggingface_hub import hf_hub_download
-          for f in ['sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx','sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx.json']:
-              p=hf_hub_download('rhasspy/piper-voices',f,local_dir='voices');print(p)
-          PY
-          V=voices/sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx
-          i=0
-          while IFS= read -r line; do i=$((i+1)); echo "$line" | python -m piper -m $V -f test-audio/s$i.wav || echo "$line" | piper -m $V -f test-audio/s$i.wav; echo "$i: $line" >> test-audio/texter.txt; done <<'TXT'
+          run "pip install -q piper-tts && python -c \"from huggingface_hub import hf_hub_download as h; [print(h('rhasspy/piper-voices',f,local_dir='voices')) for f in ['sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx','sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx.json']]\"" || true
+          mkdir -p asr-test; i=0
+          while IFS= read -r line; do i=$((i+1)); echo "$line" | python -m piper -m voices/sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx -f asr-test/s$i.wav >> $L 2>&1 || echo "$line" | piper -m voices/sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx -f asr-test/s$i.wav >> $L 2>&1; echo "s$i.wav: $line" >> asr-test/texter.txt; done <<'TXT'
           En drake och min katt.
           I skogen på månen.
           Draken ska flyga till en stor fest.
           En prinsessa och en hund som heter Sixten.
           Hemma under sängen.
           TXT
-          ls -la test-audio; cat test-audio/texter.txt
-      - name: Testa modellerna i Node (samma filer som appen använder)
-        run: |
-          cd work
-          cat > t.mjs <<'JS'
+          run "ls -la asr-test; cat asr-test/texter.txt" || true
+          cat > work/t.mjs <<'JS'
           import { pipeline, env } from '@huggingface/transformers';
-          import fs from 'fs';
-          import wav from 'node-wav';
-          env.localModelPath = '../tjs/models/'; env.allowRemoteModels = false;
-          for (const m of ['KBLab/kb-whisper-tiny','KBLab/kb-whisper-base']) {
-            if (!fs.existsSync('../tjs/models/'+m)) { console.log('saknas', m); continue }
-            const t0 = Date.now();
-            const asr = await pipeline('automatic-speech-recognition', m, { dtype: 'q8' });
+          import fs from 'fs'; import wav from 'node-wav';
+          env.localModelPath = '../out/'; env.allowRemoteModels = false;
+          for (const m of ['kb-whisper-tiny','kb-whisper-base']) {
+            if (!fs.existsSync('../out/'+m+'/onnx')) { console.log('saknas', m); continue }
+            try{
+            const t0 = Date.now(); const asr = await pipeline('automatic-speech-recognition', m, { dtype: 'q8' });
             console.log(m, 'laddad', Date.now()-t0, 'ms');
-            for (const f of fs.readdirSync('../test-audio').filter(f=>f.endsWith('.wav')).sort()) {
-              const r = wav.decode(fs.readFileSync('../test-audio/'+f)); let x = r.channelData[0];
-              const sr = r.sampleRate, n = Math.round(x.length*16000/sr), y = new Float32Array(n);
+            for (const f of fs.readdirSync('../asr-test').filter(f=>f.endsWith('.wav')).sort()) {
+              const r = wav.decode(fs.readFileSync('../asr-test/'+f)); const x = r.channelData[0], sr = r.sampleRate;
+              const n = Math.round(x.length*16000/sr), y = new Float32Array(n);
               for (let i=0;i<n;i++){ const p=i*sr/16000, a=Math.floor(p), b=Math.min(a+1,x.length-1); y[i]=x[a]+(x[b]-x[a])*(p-a) }
               const t1=Date.now(); const out = await asr(y, { language: 'swedish', task: 'transcribe' });
               console.log(m, f, JSON.stringify(out.text), (Date.now()-t1)+'ms');
-            }
+            }}catch(e){console.log(m,'FEL',e.stack)}
           }
           JS
-          npm i node-wav >/dev/null && node t.mjs
-      - name: Lägg filerna i appen och spara
-        run: |
-          set -e
+          run "cd work && node t.mjs" || true
+          set +e
           mkdir -p app/asr/models
           cp work/node_modules/@huggingface/transformers/dist/transformers.min.js app/asr/
-          cp work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.mjs work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm app/asr/ 2>/dev/null || true
-          cp work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm app/asr/ 2>/dev/null || true
-          for m in kb-whisper-tiny kb-whisper-base; do
-            s=tjs/models/KBLab/$m; [ -d $s ] || continue
-            d=app/asr/models/$m; mkdir -p $d/onnx
-            cp $s/*.json $d/
-            cp $s/onnx/encoder_model_quantized.onnx $s/onnx/decoder_model_merged_quantized.onnx $d/onnx/
-          done
-          mkdir -p test-audio-out && cp test-audio/* app/asr/ 2>/dev/null || true
-          mkdir -p asr-test && mv app/asr/*.wav app/asr/texter.txt asr-test/ 2>/dev/null || true
-          du -sh app/asr app/asr/* app/asr/models/* || true
+          cp work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.mjs work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm app/asr/
+          cp work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm app/asr/
+          for m in tiny base; do s=out/kb-whisper-$m; [ -d $s/onnx ] || continue; d=app/asr/models/kb-whisper-$m; mkdir -p $d/onnx; cp $s/*.json $d/; cp $s/onnx/*_quantized.onnx $d/onnx/; done
+          run "du -ah app/asr asr-test" || true
           git config user.name "github-actions"; git config user.email "actions@github.com"
-          git add app/asr asr-test
-          git commit -m "Svensk taligenkänning: KB-whisper (ONNX) och testljud" || echo "inget nytt"
-          git push
+          find app/asr -size +95M -print -delete >> $L
+          git add -A app/asr asr-test asr-log
+          git commit -qm "Svensk taligenkänning: modell, testljud och logg" || true
+          git pull --rebase -q; git push
