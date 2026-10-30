@@ -21,7 +21,7 @@ jobs:
           mkdir -p asr-log; L=asr-log/log.txt; : > $L
           log(){ echo "=== $*" | tee -a $L; }
           run(){ log "$*"; bash -c "$*" >> $L 2>&1; local r=$?; echo "--- exit $r" >> $L; return $r; }
-          run "pip install -q huggingface_hub 'optimum[onnxruntime]==1.24.0' 'transformers==4.48.3' onnx onnxruntime torch --extra-index-url https://download.pytorch.org/whl/cpu"
+          run "pip install -q huggingface_hub 'optimum[onnxruntime]==1.24.0' 'transformers==4.48.3' onnx onnxruntime onnxscript 'torch==2.4.1' --extra-index-url https://download.pytorch.org/whl/cpu"
           run "python -c \"from huggingface_hub import list_repo_files as l; [print(r, l(r)) for r in ['KBLab/kb-whisper-tiny','KBLab/kb-whisper-base']]\""
           run "mkdir -p work && cd work && npm init -y >/dev/null && npm i @huggingface/transformers@3.7.5 node-wav >/dev/null && ls node_modules/@huggingface/transformers/dist && ls -la node_modules/onnxruntime-web/dist | grep -E 'wasm|mjs' && grep '\"version\"' node_modules/onnxruntime-web/package.json"
           for m in tiny base; do
