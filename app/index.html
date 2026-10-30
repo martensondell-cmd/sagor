@@ -1605,7 +1605,7 @@ function talkMatch(text){
    Kungliga biblioteket) som körs i telefonen. Modellen hämtas en gång och sparas sedan i appen. */
 const ASR={model:'kb-whisper-base',dtype:{encoder_model:'q8',decoder_model_merged:'q4f16'},pipe:null,p:null,pct:0,
   base(){return 'https://martensondell-cmd.github.io/sagor/app/asr/'},
-  canMic(){return !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&(window.AudioContext||window.webkitAudioContext))&&!!window.SV_AI},
+  canMic(){let framed=false;try{framed=window.self!==window.top}catch(e){framed=true}return !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&(window.AudioContext||window.webkitAudioContext))&&!!window.SV_AI&&!framed},
   load(onp){if(this.pipe)return Promise.resolve(this.pipe);if(this.p)return this.p;
     const base=window.ASR_BASE||this.base(),files={};
     this.p=(async()=>{const T=await import(base+'transformers.min.js');
