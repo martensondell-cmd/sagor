@@ -50,7 +50,7 @@ jobs:
           for (const m of ['kb-whisper-tiny']) {
             if (!fs.existsSync('../out/'+m+'/onnx')) { console.log('saknas', m); continue }
             try{
-            const t0 = Date.now(); for (const dt of [{encoder_model:'q8',decoder_model_merged:'fp16'},{encoder_model:'q8',decoder_model_merged:'q4f16'},{encoder_model:'q8',decoder_model_merged:'q4'}]) {
+            const t0 = Date.now(); for (const dt of [{encoder_model:'q8',decoder_model_merged:'fp16'},{encoder_model:'q8',decoder_model_merged:'q4f16'}]) {
             const asr = await pipeline('automatic-speech-recognition', m, { dtype: dt });
             console.log(m, JSON.stringify(dt), 'laddad', Date.now()-t0, 'ms');
             for (const f of fs.readdirSync('../asr-test').filter(f=>f.endsWith('.wav')).sort()) {
@@ -68,19 +68,19 @@ jobs:
           cp work/node_modules/@huggingface/transformers/dist/transformers.min.js app/asr/
           cp work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.mjs work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm app/asr/
           cp work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm app/asr/
-          for m in tiny; do s=out/kb-whisper-$m; [ -d $s/onnx ] || continue; d=app/asr/models/kb-whisper-$m; mkdir -p $d/onnx; cp $s/*.json $d/; rm -rf $d/onnx; mkdir -p $d/onnx; for f in encoder_model_quantized encoder_model_fp16 decoder_model_merged_fp16 decoder_model_merged_q4f16 decoder_model_merged_q4; do cp $s/onnx/$f.onnx $d/onnx/ 2>/dev/null; done; done
+          for m in tiny; do s=out/kb-whisper-$m; [ -d $s/onnx ] || continue; d=app/asr/models/kb-whisper-$m; mkdir -p $d/onnx; cp $s/*.json $d/; rm -rf $d/onnx; mkdir -p $d/onnx; for f in encoder_model_quantized decoder_model_merged_fp16 decoder_model_merged_q4f16; do cp $s/onnx/$f.onnx $d/onnx/ 2>/dev/null; done; done
           run "du -ah app/asr asr-test" || true
           git config user.name "github-actions"; git config user.email "actions@github.com"
           find app/asr -size +95M -print -delete >> $L
           git add -A app/asr asr-test asr-log
           git commit -qm "Svensk taligenkänning: modell, testljud och logg" || true
-          git pull --rebase -q; git push
+          git pull --rebase -q >> $L 2>&1; git push >> $L 2>&1; echo "push $?" >> $L; cp $L /tmp/l2.txt
       - name: Spara loggen på egen gren
         if: always()
         shell: bash
         run: |
           set +e
-          cp asr-log/log.txt /tmp/log.txt 2>/dev/null || echo "ingen logg" > /tmp/log.txt
+          cp /tmp/l2.txt /tmp/log.txt 2>/dev/null || cp asr-log/log.txt /tmp/log.txt 2>/dev/null || echo "ingen logg" > /tmp/log.txt
           git log --oneline -3 >> /tmp/log.txt; git status >> /tmp/log.txt 2>&1
           git config user.name "github-actions"; git config user.email "actions@github.com"
           git checkout -q --orphan logg && git rm -rfq --cached . && cp /tmp/log.txt ./LOG.txt && git add LOG.txt && git commit -qm logg && git push -qf origin logg
