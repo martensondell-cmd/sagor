@@ -24,7 +24,7 @@ jobs:
           run "pip install -q huggingface_hub onnxscript 'torch==2.5.1' --extra-index-url https://download.pytorch.org/whl/cpu"
           run "mkdir -p work && cd work && npm init -y >/dev/null && npm i @huggingface/transformers@3.7.5 node-wav >/dev/null && grep '\"version\"' node_modules/onnxruntime-web/package.json"
           run "git clone -q --depth 1 -b 3.7.5 https://github.com/huggingface/transformers.js tjs && cd tjs && pip install -q -r scripts/requirements.txt 'torch==2.5.1' onnxscript --extra-index-url https://download.pytorch.org/whl/cpu"
-          for m in tiny; do
+          for m in tiny base; do
             run "cd tjs && python -m scripts.convert --quantize --model_id KBLab/kb-whisper-$m" || true
             run "ls -la tjs/models/KBLab/kb-whisper-$m tjs/models/KBLab/kb-whisper-$m/onnx" || true
             mkdir -p out; rm -rf out/kb-whisper-$m; cp -r tjs/models/KBLab/kb-whisper-$m out/ 2>/dev/null || true
@@ -47,10 +47,10 @@ jobs:
           import { pipeline, env } from '@huggingface/transformers';
           import fs from 'fs'; import wav from 'node-wav';
           env.localModelPath = '../out/'; env.allowRemoteModels = false;
-          for (const m of ['kb-whisper-tiny']) {
+          for (const m of ['kb-whisper-base']) {
             if (!fs.existsSync('../out/'+m+'/onnx')) { console.log('saknas', m); continue }
             try{
-            const t0 = Date.now(); for (const dt of [{encoder_model:'q8',decoder_model_merged:'fp16'},{encoder_model:'q8',decoder_model_merged:'q4f16'}]) {
+            const t0 = Date.now(); for (const dt of [{encoder_model:'q8',decoder_model_merged:'q4f16'}]) {
             const asr = await pipeline('automatic-speech-recognition', m, { dtype: dt });
             console.log(m, JSON.stringify(dt), 'laddad', Date.now()-t0, 'ms');
             for (const f of fs.readdirSync('../asr-test').filter(f=>f.endsWith('.wav')).sort()) {
@@ -68,7 +68,7 @@ jobs:
           cp work/node_modules/@huggingface/transformers/dist/transformers.min.js app/asr/
           cp work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.mjs work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm app/asr/
           cp work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm app/asr/
-          for m in tiny; do s=out/kb-whisper-$m; [ -d $s/onnx ] || continue; d=app/asr/models/kb-whisper-$m; mkdir -p $d/onnx; cp $s/*.json $d/; rm -rf $d/onnx; mkdir -p $d/onnx; for f in encoder_model_quantized decoder_model_merged_fp16 decoder_model_merged_q4f16; do cp $s/onnx/$f.onnx $d/onnx/ 2>/dev/null; done; done
+          for m in tiny base; do s=out/kb-whisper-$m; [ -d $s/onnx ] || continue; d=app/asr/models/kb-whisper-$m; mkdir -p $d/onnx; cp $s/*.json $d/; rm -rf $d/onnx; mkdir -p $d/onnx; for f in encoder_model_quantized decoder_model_merged_q4f16 $( [ $m = tiny ] && echo decoder_model_merged_fp16 ); do cp $s/onnx/$f.onnx $d/onnx/ 2>/dev/null; done; done
           run "du -ah app/asr asr-test" || true
           git config user.name "github-actions"; git config user.email "actions@github.com"
           find app/asr -size +95M -print -delete >> $L
