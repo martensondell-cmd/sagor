@@ -24,37 +24,42 @@ jobs:
           run "pip install -q huggingface_hub onnxscript 'torch==2.5.1' --extra-index-url https://download.pytorch.org/whl/cpu"
           run "mkdir -p work && cd work && npm init -y >/dev/null && npm i @huggingface/transformers@3.7.5 node-wav >/dev/null && grep '\"version\"' node_modules/onnxruntime-web/package.json"
           run "git clone -q --depth 1 -b 3.7.5 https://github.com/huggingface/transformers.js tjs && cd tjs && pip install -q -r scripts/requirements.txt 'torch==2.5.1' onnxscript --extra-index-url https://download.pytorch.org/whl/cpu"
-          for m in tiny base; do
+          for m in tiny; do
             run "cd tjs && python -m scripts.convert --quantize --model_id KBLab/kb-whisper-$m" || true
             run "ls -la tjs/models/KBLab/kb-whisper-$m tjs/models/KBLab/kb-whisper-$m/onnx" || true
             mkdir -p out; rm -rf out/kb-whisper-$m; cp -r tjs/models/KBLab/kb-whisper-$m out/ 2>/dev/null || true
           done
-          run "pip install -q piper-tts && python -c \"from huggingface_hub import hf_hub_download as h; [print(h('rhasspy/piper-voices',f,local_dir='voices')) for f in ['sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx','sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx.json']]\"" || true
-          mkdir -p asr-test; i=0
-          while IFS= read -r line; do i=$((i+1)); echo "$line" | python -m piper -m voices/sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx -f asr-test/s$i.wav >> $L 2>&1 || echo "$line" | piper -m voices/sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx -f asr-test/s$i.wav >> $L 2>&1; echo "s$i.wav: $line" >> asr-test/texter.txt; done <<'TXT'
+          run "pip install -q piper-tts && python -c \"from huggingface_hub import hf_hub_download as h; [print(h('rhasspy/piper-voices',f,local_dir='voices')) for f in ['sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx','sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx.json','sv/sv_SE/lisa/medium/sv_SE-lisa-medium.onnx','sv/sv_SE/lisa/medium/sv_SE-lisa-medium.onnx.json']]\"" || true
+          mkdir -p asr-test; rm -f asr-test/*.wav asr-test/texter.txt
+          cat > lines.txt <<'TXT'
           En drake och min katt.
           I skogen på månen.
           Draken ska flyga till en stor fest.
           En prinsessa och en hund som heter Sixten.
           Hemma under sängen.
+          Ett spöke och en robot i rymden.
+          Vi ska åka tåg till Egypten.
           TXT
+          for v in nst:s lisa:l; do name=${v%%:*}; pre=${v##*:}; i=0; M=$(ls voices/sv/sv_SE/$name/medium/*.onnx 2>/dev/null | head -1); [ -n "$M" ] || continue
+            while IFS= read -r line; do line="$(echo "$line" | sed 's/^ *//')"; i=$((i+1)); echo "$line" | python -m piper -m $M -f asr-test/$pre$i.wav >> $L 2>&1; echo "$pre$i.wav: $line" >> asr-test/texter.txt; done < lines.txt; done
           run "ls -la asr-test; cat asr-test/texter.txt" || true
           cat > work/t.mjs <<'JS'
           import { pipeline, env } from '@huggingface/transformers';
           import fs from 'fs'; import wav from 'node-wav';
           env.localModelPath = '../out/'; env.allowRemoteModels = false;
-          for (const m of ['kb-whisper-tiny','kb-whisper-base']) {
+          for (const m of ['kb-whisper-tiny']) {
             if (!fs.existsSync('../out/'+m+'/onnx')) { console.log('saknas', m); continue }
             try{
-            const t0 = Date.now(); const asr = await pipeline('automatic-speech-recognition', m, { dtype: 'q8' });
-            console.log(m, 'laddad', Date.now()-t0, 'ms');
+            const t0 = Date.now(); for (const dt of [{encoder_model:'q8',decoder_model_merged:'fp16'},{encoder_model:'q8',decoder_model_merged:'q4f16'},{encoder_model:'q8',decoder_model_merged:'q4'}]) {
+            const asr = await pipeline('automatic-speech-recognition', m, { dtype: dt });
+            console.log(m, JSON.stringify(dt), 'laddad', Date.now()-t0, 'ms');
             for (const f of fs.readdirSync('../asr-test').filter(f=>f.endsWith('.wav')).sort()) {
               const r = wav.decode(fs.readFileSync('../asr-test/'+f)); const x = r.channelData[0], sr = r.sampleRate;
               const n = Math.round(x.length*16000/sr), y = new Float32Array(n);
               for (let i=0;i<n;i++){ const p=i*sr/16000, a=Math.floor(p), b=Math.min(a+1,x.length-1); y[i]=x[a]+(x[b]-x[a])*(p-a) }
               const t1=Date.now(); const out = await asr(y, { language: 'swedish', task: 'transcribe' });
               console.log(m, f, JSON.stringify(out.text), (Date.now()-t1)+'ms');
-            }}catch(e){console.log(m,'FEL',e.stack)}
+            }}}catch(e){console.log(m,'FEL',e.stack)}
           }
           JS
           run "cd work && node t.mjs" || true
@@ -63,7 +68,7 @@ jobs:
           cp work/node_modules/@huggingface/transformers/dist/transformers.min.js app/asr/
           cp work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.mjs work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm app/asr/
           cp work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm app/asr/
-          for m in tiny base; do s=out/kb-whisper-$m; [ -d $s/onnx ] || continue; d=app/asr/models/kb-whisper-$m; mkdir -p $d/onnx; cp $s/*.json $d/; rm -rf $d/onnx; mkdir -p $d/onnx; cp $s/onnx/encoder_model_quantized.onnx $s/onnx/decoder_model_merged_quantized.onnx $d/onnx/; done
+          for m in tiny; do s=out/kb-whisper-$m; [ -d $s/onnx ] || continue; d=app/asr/models/kb-whisper-$m; mkdir -p $d/onnx; cp $s/*.json $d/; rm -rf $d/onnx; mkdir -p $d/onnx; for f in encoder_model_quantized encoder_model_fp16 decoder_model_merged_fp16 decoder_model_merged_q4f16 decoder_model_merged_q4; do cp $s/onnx/$f.onnx $d/onnx/ 2>/dev/null; done; done
           run "du -ah app/asr asr-test" || true
           git config user.name "github-actions"; git config user.email "actions@github.com"
           find app/asr -size +95M -print -delete >> $L
