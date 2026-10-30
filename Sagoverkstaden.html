@@ -930,6 +930,35 @@ button,a,.tile,.rib,.chipbtn,.btn,.round{touch-action:manipulation}
 #v-lib .empty h2{font-size:1.25rem}#v-lib .empty p{font-size:.88rem;margin:0}
 #v-lib .empty .btn{font-size:.95rem;padding:.5em .9em}
 #v-lib .empty .btn{white-space:nowrap}
+
+/* ===== Berätta-läget ===== */
+.sheet.talk{width:min(440px,100%);align-items:center;text-align:center;gap:12px;position:relative}
+.tkx{position:absolute;top:10px;right:10px;min-width:40px}
+.tkdots{display:flex;gap:8px}.tkdots i{width:12px;height:12px;border-radius:50%;border:2.5px solid var(--ink);background:transparent}.tkdots i.on{background:var(--pick)}.tkdots i.done{background:var(--ink)}
+.tkhead{display:flex;gap:10px;align-items:center;text-align:left;width:100%}
+.tkhead .tkowl,.tkhead svg{width:64px;height:64px;flex:none}
+.tkbub{background:var(--paper);border:3px solid var(--ink);border-radius:20px;padding:10px 14px;position:relative;flex:1}
+.tkbub h2{font-size:1.35rem;margin:0}.tkbub .mini{margin:2px 0 0}
+.tkmic{width:118px;height:118px;border-radius:50%;border:4px solid var(--ink);background:var(--pick);box-shadow:0 6px 0 var(--ink);display:grid;place-items:center;cursor:pointer;position:relative;touch-action:manipulation}
+.tkmic span{font-size:3.4rem;line-height:1}
+.tkmic:active{transform:translateY(3px);box-shadow:0 3px 0 var(--ink)}
+.tkmic.live{background:#ff8f8f}
+.tkmic.live::after{content:"";position:absolute;inset:-12px;border-radius:50%;border:4px solid #ff8f8f;animation:tkpulse 1.1s ease-out infinite}
+@keyframes tkpulse{from{transform:scale(.9);opacity:1}to{transform:scale(1.25);opacity:0}}
+.tklab{font-family:var(--f-display);font-weight:800;font-size:1.1rem;margin-top:-4px}
+.tktxt{width:100%;display:flex;flex-direction:column;gap:4px;text-align:left}
+.tktxt textarea{font:inherit;font-size:1.15rem;border:3px solid var(--ink);border-radius:16px;padding:10px 12px;resize:none;width:100%;box-sizing:border-box;background:var(--paper);color:var(--ink)}
+.tksaid{font-size:1.15rem;font-style:italic;min-height:1.4em;max-height:5.6em;overflow:hidden}
+.tkfound{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:52px;align-items:center}
+.tkic svg{width:48px;height:48px;animation:tkpop .35s cubic-bezier(.3,1.6,.5,1)}
+.tkname{font-family:var(--f-display);font-weight:800;border:2.5px solid var(--ink);border-radius:999px;padding:.2em .7em;background:var(--pick)}
+@keyframes tkpop{from{transform:scale(.2)}to{transform:scale(1)}}
+.tkbtns{display:flex;gap:10px;justify-content:center;width:100%}.tkbtns .kbig{flex:1;min-width:0}.tkbtns .ksmall{flex:0 0 auto}
+.tkbtns .kbig:disabled{opacity:.45}
+.tktray{min-width:44px;font-size:1.2rem;flex:none}
+body.kid .kidhome .ktalk{background:#ffd0d0}
+body.kid .kidhome{flex-wrap:nowrap;gap:10px}body.kid .kidhome .kbig{flex:1;min-width:0;max-width:150px;padding:8px 6px;font-size:1.05rem}
+@media (orientation:landscape) and (max-height:520px){.sheet.talk{gap:6px}.tkmic{width:84px;height:84px}.tkmic span{font-size:2.4rem}.tkhead svg{width:44px;height:44px}.tkbub h2{font-size:1.1rem}.tkbtns .kbig{min-height:64px}}
 </style>
 
 <svg id="sprite" width="0" height="0" style="position:absolute" aria-hidden="true"></svg>
@@ -961,12 +990,13 @@ button,a,.tile,.rib,.chipbtn,.btn,.round{touch-action:manipulation}
           <p class="lead">Välj 3–20 bilder – när, var, vem som är modig och vem som är läskig – så skrivs en helt ny saga.</p>
           <div class="actions">
             <button class="btn" data-go="bygg"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#s-magiskt"/></svg>Bygg en ny saga</button>
+            <button class="btn sec" data-talk="1">🎤 Berätta sagan</button>
             <button class="btn sec" data-go="hyllan" id="homeLib">Bokhyllan</button>
             <button class="btn sec" data-go="barnen" id="homeKids">Barnen</button>
           </div>
           <button class="link" id="readExample">Läs exempelsagan</button>
           <div class="kidwho" id="kidWho"></div>
-          <div class="kidhome"><button class="kbig" data-go="bygg"><span>✨</span>Ny saga</button><button class="kbig" data-go="hyllan"><span>📚</span>Mina sagor</button></div>
+          <div class="kidhome"><button class="kbig ktalk" data-talk="1"><span>🎤</span>Berätta</button><button class="kbig" data-go="bygg"><span>✨</span>Ny saga</button><button class="kbig" data-go="hyllan"><span>📚</span>Mina sagor</button></div>
         </div></div>
       </div>
     </section>
@@ -1032,7 +1062,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v42 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v43 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1518,6 +1548,72 @@ function renderHome(){renderKidWho();
   $('#homeKids').textContent=S.kids.length?`Barnen (${S.kids.map(k=>k.name).join(', ')})`:'Lägg till barnen';
 }
 $('#readExample').onclick=()=>openReader(EXAMPLE);
+document.addEventListener('click',e=>{const b=e.target.closest('[data-talk]');if(b){e.preventDefault();TALK.open()}});
+
+/* ============ Berätta: barnet pratar, appen lyssnar och hittar bilderna ============ */
+const TALKW={urtid:'urtid',vikingatid:'viking',riddartid:'riddartid|medeltid',farfar:'farfars tid|förr i tiden',nutid:'=idag|nutid|i dag',framtid:'framtid',stenalder:'stenålder',sommarlov:'sommar',jul:'jul|tomte',midsommar:'midsommar',halloween:'hallowe|hallowee',vinter:'vinter|snö',host:'höst',varen:'=våren|våras',pask:'påsk',fodelsedag:'födelsedag|kalas|fyller år',fullmane:'fullmån',
+ stad:'=stad|=staden|=stan',skog:'skog',djungel:'djungel',hav:'=havet|=hav|strand',savann:'savann',berg:'=berg|=berget|=bergen|fjäll',oken:'öken',rymden:'rymd|raket',slott:'slott',grotta:'grott',bondgard:'bondgård|=gård|=gården|=kor',hemma:'=hemma|=huset',under:'under sängen',nojesfalt:'nöjesfält|tivoli|karusell',tradkoja:'koja',skola:'skola|dagis',sjo:'=sjö|=sjön',underhavet:'under havet|dyka|dykar',molnen:'moln',bibliotek:'bibliotek',cirkus:'cirkus|clown',fyr:'=fyr|=fyren',tag:'=tåg|=tåget',ballong:'ballong',vulkanon:'vulkan',lekplats:'lekplats|gunga|rutschkana',
+ sverige:'sverige',kina:'kina',egypten:'egypt|pyramid',frankrike:'frankrike|paris',arktis:'arktis|nordpol|isbjörn',manen:'=månen|=månen',mars:'=mars',sagolandet:'sagoland',japan:'japan',italien:'italien|pizza',australien:'australien|känguru',amazonas:'amazon',atlantis:'atlantis',godisland:'godis',indien:'indien',brasilien:'brasilien',island:'=island',newyork:'new york',
+ drake:'=drake|=draken|=drakar|=drakarna',haxa:'=häxa|=häxan|=häxor',monster:'monster',spindel:'spindel',haj:'=haj|=hajen|=hajar',krokodil:'krokodil',dino:'dino',spoke:'spök',troll:'=troll|=trollet|=trollen',varg:'=varg|=vargen|=vargar',robot:'=robot|=roboten|=robotar',blackfisk:'bläckfisk',mumie:'mumie',vampyr:'vampyr',jatte:'=jätte|=jätten|=jättar',alien:'rymdvarelse|utomjording|alien',orm:'=orm|=ormen|=ormar',trollkarl:'trollkarl',sjoodjur:'sjöodjur',skuggan:'=skugga|=skuggan',askmoln:'åska|åskmoln',snohaxa:'snöhäxa',
+ riddare:'riddare',superhjalte:'superhjält',prinsessa:'prinsess',prins:'=prins|=prinsen',pappa:'pappa',mamma:'mamma',mormor:'mormor|farmor',morfar:'morfar|=farfar',pirat:'pirat|sjörövare',astronaut:'astronaut',detektiv:'detektiv',brandman:'brandm',ninja:'ninja',sjojungfru:'sjöjungfru',uppfinnare:'uppfinnare',kock:'=kock|=kocken',veterinar:'djurdoktor|veterinär',syskon:'storasyster|storebror|syskon',magiker:'magiker',
+ hund:'=hund|=hunden|=hundar|valp',katt:'=katt|=katten|=katter|kisse',hast:'häst|ponny',enhorning:'enhörning',uggla:'uggla|ugglan',fe:'=fe|=fen|=feen|älva',kanin:'kanin',nalle:'nalle|björn',pingvin:'pingvin',apa:'=apa|=apan|=apor',groda:'groda|grodan',elefant:'elefant',drakunge:'drakunge|bebisdrake|liten drake',robotkompis:'robotkompis',igelkott:'igelkott',skoldpadda:'sköldpadd',papegoja:'papegoj',delfin:'delfin',
+ roligt:'rolig',mysigt:'mysig',spanning:'spännande',magiskt:'magisk|=magi',aventyr:'äventyr',vanskap:'vänskap|bästa vän',tokigt:'tokig|knasig',modigt:'modig',lugnt:'=lugn|=lugnt',busigt:'busig',romans:'kärlek|=kära|=kär',hemligt:'hemlig',mystiskt:'mystisk',
+ lyckligt:'lycklig',godnatt:'somna|=sova',fest:'=fest|=festen',skratt:'skratt',overrask:'överrask',
+ trollstav:'trollstav',matta:'flygande matta|=matta|=mattan',mantel:'osynlig',tidsmaskin:'tidsmaskin',dryck:'krymp|trolldryck',ritpenna:'penna|pennan',agg:'=ägg|=ägget',kompass:'kompass',onskesten:'önskesten',spegel:'spegel'};
+function talkMatch(text){
+  const t=' '+String(text||'').toLowerCase().replace(/[^a-zåäöéü0-9 ]+/g,' ').replace(/\s+/g,' ')+' ';const toks=t.trim().split(' ');
+  const hit=[];for(const[k,pat]of Object.entries(TALKW)){if(!I[k])continue;
+    if(pat.split('|').some(a=>a.includes(' ')?t.includes(' '+a):a[0]==='='?toks.includes(a.slice(1)):toks.some(w=>w.startsWith(a))))hit.push(k)}
+  if(hit.includes('drakunge'))hit.splice(hit.indexOf('drake'),hit.includes('drake')?1:0);
+  const kids=S.kids.filter(k=>toks.includes(String(k.name||'').toLowerCase().split(' ')[0])).map(k=>k.id);
+  const m=/(?:som |hon |han |den |hen )?heter ([a-zåäö]+)/.exec(t);const nm=m&&!['inte','det','så'].includes(m[1])?nameCase(m[1]):'';
+  return{keys:hit,kids,name:nm}}
+const TALK={q:[{k:'vem',t:'Vem ska vara med i sagan?',hint:'Till exempel en drake, en prinsessa eller din katt.'},{k:'var',t:'Var ska sagan hända?',hint:'I skogen, på månen eller hemma under sängen?'},{k:'vad',t:'Vad ska hända i sagan?',hint:'Berätta vad som händer – vad som helst!'}],
+  i:0,ans:{},rec:null,on:false,mode:'mic',
+  SR(){return window.SpeechRecognition||window.webkitSpeechRecognition},
+  open(){Voice.stop();this.i=0;this.ans={};this.found=[];this.kids=[];this.name='';this.mode=this.SR()?'mic':'text';this.render();this.ask()},
+  ask(){const q=this.q[this.i];try{if('speechSynthesis' in window&&LS.get('autoRead',true)){Unlock.start();speechSynthesis.cancel();const v=VOICES.find(x=>x.k===S.voice)||VOICES[0];Voice.say(Voice.utter(q.t,v))}}catch(e){}},
+  all(){return Object.values(this.ans).join('. ')},
+  update(){const r=talkMatch(this.all());this.found=r.keys;this.kids=r.kids;this.name=r.name;
+    const f=$('#tkFound');if(f)f.innerHTML=[...this.kids.map(id=>`<span class="tkic kidav" style="--kc:${kidCol(id)}">${ic(kidKey(id),'')}</span>`),...this.found.map(k=>`<span class="tkic">${ic(k,'')}</span>`),this.name&&!this.found.length?`<span class="tkname">${esc(this.name)}</span>`:''].join('')||'<span class="mini">Bilderna jag hittar visas här.</span>';
+    const go=$('#tkGo');if(go)go.disabled=!(this.found.length+(this.name?1:0)+this.kids.length)},
+  render(){const q=this.q[this.i],last=this.i===this.q.length-1,a=this.ans[q.k]||'';
+    $('#modal').innerHTML=`<div class="mback" role="dialog" aria-modal="true" aria-labelledby="tkq"><div class="sheet talk">
+      <button class="chipbtn tkx" id="tkClose" aria-label="Stäng">✕</button>
+      <div class="tkdots">${this.q.map((x,j)=>`<i class="${j===this.i?'on':j<this.i?'done':''}"></i>`).join('')}</div>
+      <div class="tkhead">${ic('uggla','tkowl')}<div class="tkbub"><h2 id="tkq">${q.t}</h2><p class="mini">${q.hint}</p></div></div>
+      ${this.mode==='mic'?`<button class="tkmic ${this.on?'live':''}" id="tkMic" aria-label="${this.on?'Sluta lyssna':'Tryck och prata'}"><span>🎤</span></button><div class="tklab">${this.on?'Jag lyssnar …':'Tryck och prata'}</div>`
+       :`<label class="tktxt"><span class="mini">Tryck i rutan och sedan på 🎤 på tangentbordet för att prata.</span><textarea id="tkText" rows="2" placeholder="Berätta här …">${esc(a)}</textarea></label>`}
+      <div class="tksaid" id="tkSaid">${a?'”'+esc(a)+'”':''}</div>
+      <div class="tkfound" id="tkFound"></div>
+      <div class="tkbtns">${this.i>0?`<button class="kbig ksmall" id="tkBack" aria-label="Föregående fråga"><span>⬅️</span></button>`:''}
+        ${last?`<button class="kbig" id="tkPick"><span>🖼️</span>Välj bilder</button><button class="kbig kgo" id="tkGo"><span>✨</span>Klar!</button>`:`<button class="kbig" id="tkNext"><span>➡️</span>${a?'Nästa':'Hoppa över'}</button>`}</div>
+    </div></div>`;
+    this.update();const m=$('#modal');
+    m.oninput=e=>{if(e.target.id==='tkText'){this.ans[q.k]=e.target.value.trim();$('#tkSaid').textContent='';this.update();const nx=$('#tkNext');if(nx)nx.lastChild.textContent=this.ans[q.k]?'Nästa':'Hoppa över'}};
+    m.onclick=e=>{const b=e.target.closest('button');if(e.target.classList.contains('mback')||(b&&b.id==='tkClose')){this.stopRec();m.innerHTML='';try{speechSynthesis.cancel()}catch(_){}return}if(!b)return;
+      if(b.id==='tkMic'){this.on?this.stopRec():this.listen();return}
+      if(b.id==='tkNext'){this.stopRec();this.i++;this.render();this.ask();return}
+      if(b.id==='tkBack'){this.stopRec();this.i--;this.render();this.ask();return}
+      if(b.id==='tkPick'){this.stopRec();this.apply();m.innerHTML='';show('bygg');toast(this.found.length?'Här är bilderna från din berättelse. Välj fler om du vill!':'Välj bilder till din saga!');return}
+      if(b.id==='tkGo'){this.stopRec();this.apply();m.innerHTML='';show('bygg');if(S.sel.length>=3){KID.on?openFinishKid():openFinish()}else toast('Välj några bilder till, så blir sagan klar!');return}}},
+  listen(){const R=this.SR();if(!R){this.mode='text';this.render();return}
+    try{speechSynthesis.cancel()}catch(e){}
+    const q=this.q[this.i],r=this.rec=new R();r.lang='sv-SE';r.interimResults=true;r.continuous=false;r.maxAlternatives=1;
+    const base=this.ans[q.k]?this.ans[q.k]+' ':'';let fin='';
+    r.onresult=ev=>{let it='';for(let j=ev.resultIndex;j<ev.results.length;j++){const x=ev.results[j];if(x.isFinal)fin+=x[0].transcript;else it+=x[0].transcript}
+      const txt=(base+fin+it).trim();this.ans[q.k]=txt;$('#tkSaid').textContent='”'+txt+'”';this.update()};
+    r.onerror=ev=>{DBG.log('talk: '+ev.error);if(ev.error==='not-allowed'||ev.error==='service-not-allowed'||ev.error==='audio-capture'){this.on=false;this.mode='text';this.render();toast('Mikrofonen är avstängd här – prata via tangentbordets 🎤 i stället.')}};
+    r.onend=()=>{if(this.rec!==r)return;this.on=false;this.rec=null;if(this.mode==='mic'){this.render();if(this.ans[q.k]){const v=VOICES.find(x=>x.k===S.voice)||VOICES[0];try{Voice.say(Voice.utter(pick(['Vad roligt!','Spännande!','Vilken bra idé!','Okej!']),v))}catch(e){}}}};
+    try{r.start();this.on=true;const mb=$('#tkMic');if(mb){mb.classList.add('live');$('.tklab').textContent='Jag lyssnar …'}}catch(e){this.mode='text';this.render()}},
+  stopRec(){const r=this.rec;this.on=false;if(r){try{r.stop()}catch(e){}}},
+  apply(){const add=k=>{if(!S.sel.includes(k)&&S.sel.length<MAXSEL)S.sel.push(k)};
+    this.found.forEach(add);
+    if(this.name&&!this.found.some(k=>I[k].cat==='hjalte')){add('namngiven');S.names.namngiven=this.name}
+    S.inStory=S.inStory||[];this.kids.forEach(id=>{if(!S.inStory.includes(id))S.inStory.push(id)});if(S.kids.length)S.listen=S.inStory.length?[...S.inStory]:S.kids.map(k=>k.id);
+    S.wish=(this.ans.vad||'').trim();S.told=this.all();
+    const miss=CATS.find(c=>!S.sel.some(k=>I[k]&&I[k].cat===c.id));if(miss)S.cat=miss.id;
+  }};
 
 /* ============ builder ============ */
 function renderBuild(){
@@ -1559,7 +1655,7 @@ function renderRecipe(){
   const kids=S.kids.length?`<div class="kidchips">${S.kids.map(k=>`<button class="kc" data-listen="${k.id}" aria-pressed="${S.listen.includes(k.id)}" style="--kc:${kidCol(k.id)}">${esc(k.name)}, ${k.age} år</button>`).join('')}</div>`
     :`<div class="row"><label for="ageSel" class="mini">Lyssnarens ålder</label><select id="ageSel">${Array.from({length:12},(_,i)=>`<option ${S.age===i+1?'selected':''}>${i+1}</option>`).join('')}</select></div><p class="mini">Tips: lägg in barnen under <button class="link" data-go="barnen">Barnen</button> så kommer sagorna ihåg dem.</p>`;
   $('#recipe').innerHTML=`<div><h2>Din saga</h2><div class="count">${n} av ${MAXSEL} bilder${n<3?` · välj minst ${3-n} till`:''}</div></div><div class="slots">${slots}</div><div><div class="lbl">Vem lyssnar i kväll?</div>${kids}</div>${inStoryHTML()}<button class="btn go" id="doneBtn" ${ok?'':'disabled'}>Klar – nästan dags för saga</button>${n?`<button class="link" id="clearSel">Börja om</button>`:''}`;
-  $('#tray').innerHTML=`<div class="ics">${S.sel.map(k=>`<span data-rm="${k}" role="button" aria-label="Ta bort ${esc(I[k].label)}">${ic(k,'')}</span>`).join('')||'<span class="mini"><b>Steg 1 av 2:</b> välj 3–20 bilder</span>'}</div>${ok?'':`<span class="count">${n?'Minst '+(3-n)+' till':''}</span>`}<button class="btn go" id="doneBtn2" ${ok?'':'disabled'}>Nästa →</button>`;
+  $('#tray').innerHTML=`<div class="ics">${S.sel.map(k=>`<span data-rm="${k}" role="button" aria-label="Ta bort ${esc(I[k].label)}">${ic(k,'')}</span>`).join('')||'<span class="mini"><b>Steg 1 av 2:</b> välj 3–20 bilder</span>'}</div>${ok?'':`<span class="count">${n?'Minst '+(3-n)+' till':''}</span>`}<button class="chipbtn tktray" data-talk="1" aria-label="Berätta med rösten">🎤</button><button class="btn go" id="doneBtn2" ${ok?'':'disabled'}>Nästa →</button>`;
 }
 $('#recipe').addEventListener('click',e=>{
   const rm=e.target.closest('[data-rm]');if(rm)return toggleSel(rm.dataset.rm);
@@ -1623,7 +1719,7 @@ function openFinish(){
     <div class="field"><div class="row" style="justify-content:space-between"><span class="lbl" style="margin:0">Hur lång ska sagan vara?</span><div class="seg"><button data-mode="min" aria-pressed="${S.lenMode==='min'}">Minuter</button><button data-mode="sid" aria-pressed="${S.lenMode==='sid'}">Sidor</button></div></div><div id="lenBox">${lenRow()}</div></div>
     ${mobile()?`<div id="finKids">${finKidsHTML()}</div>`:''}
     ${fields?`<div class="finf"><span class="lbl" style="margin:0">Vad heter de?</span>${fields}</div>`:''}
-    <div class="field"><label for="extra">Något extra? <span class="mini">(valfritt)</span></label><input type="text" maxlength="200" id="extra" value="${esc(S.extra)}" placeholder="t.ex. vår katt Sixten och en röd ballong"></div>
+    <div class="field"><label for="extra">Något extra? <span class="mini">(valfritt)</span></label><input type="text" maxlength="200" id="extra" value="${esc(S.extra||(S.told||'').slice(0,200))}" placeholder="t.ex. vår katt Sixten och en röd ballong"></div>
     <div class="row" style="justify-content:space-between"><button class="btn sec" id="finBack">Tillbaka</button><button class="btn" id="finGo"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#s-magiskt"/></svg>Skriv sagan</button></div>
   </div></div>`;
   const m=$('#modal');
@@ -1637,11 +1733,11 @@ function openFinish(){
       let bad=null;
       S.sel.filter(NEEDS).forEach(k=>{const el=$('#nm-'+k);if(!el)return;const v=el.tagName==='SELECT'?el.value.trim():nameCase(el.value);el.value=v;S.names[k]=v;const ds=$('#ds-'+k);if(ds)S.descs[k]=ds.value.trim();const f=el.closest('.field');f.classList.toggle('err',!!f.dataset.req&&!v);if(f.dataset.req&&!v&&!bad)bad=el});
       if(bad){bad.focus();toast('Skriv ett namn i det röda fältet.');return}
-      S.extra=$('#extra').value.trim();m.innerHTML='';
+      S.extra=$('#extra').value.trim();m.innerHTML='';const wish=S.wish||'';
       const z=sizing(S.lenMode,S.lenMode==='min'?S.lenMin:S.lenPg,ages());
       const names={};S.sel.filter(NEEDS).forEach(k=>{if(S.names[k])names[k]=S.names[k]});
       const descs={};if(S.descs.egen&&S.sel.includes('egen'))descs.egen=S.descs.egen;
-      startStory({kidChars:S.inStory.map(id=>S.kids.find(k=>k.id===id)).filter(Boolean).map(kidChar),themes:[...S.sel],names,descs,extra:S.extra,kidIds:listenKids().map(k=>k.id),kids:listenKids().map(k=>({name:k.name,age:+k.age})),ages:ages(),...z});
+      startStory({kidChars:S.inStory.map(id=>S.kids.find(k=>k.id===id)).filter(Boolean).map(kidChar),themes:[...S.sel],names,descs,extra:S.extra,wish,kidIds:listenKids().map(k=>k.id),kids:listenKids().map(k=>({name:k.name,age:+k.age})),ages:ages(),...z});
     }
   };
   m.onchange=e=>{if(e.target.id==='ageSel2'){S.age=+e.target.value;$('#lenBox').innerHTML=lenRow()}};
@@ -1660,7 +1756,7 @@ function openFinishKid(){
     if(t.dataset.klen){S.lenMode='min';S.lenMin=+t.dataset.klen;m.querySelectorAll('[data-klen]').forEach(b=>{b.classList.toggle('on',b===t);b.setAttribute('aria-pressed',b===t)});return}
     if(t.id==='kGo'){sayHello();m.innerHTML='';const z=sizing('min',S.lenMin||5,ages());const names={};S.sel.filter(NEEDS).forEach(k=>{if(S.names[k])names[k]=S.names[k]});
       if(S.sel.includes('namngiven')&&!names.namngiven)names.namngiven='en snäll granne';if(S.sel.includes('egen')&&!names.egen)names.egen='Kompisen';
-      startStory({kidChars:S.inStory.map(id=>S.kids.find(k=>k.id===id)).filter(Boolean).map(kidChar),themes:[...S.sel],names,descs:{},extra:'',kidIds:listenKids().map(k=>k.id),kids:listenKids().map(k=>({name:k.name,age:+k.age})),ages:ages(),...z})}};
+      startStory({kidChars:S.inStory.map(id=>S.kids.find(k=>k.id===id)).filter(Boolean).map(kidChar),themes:[...S.sel],names,descs:{},extra:S.told||'',wish:S.wish||'',kidIds:listenKids().map(k=>k.id),kids:listenKids().map(k=>({name:k.name,age:+k.age})),ages:ages(),...z})}};
 }
 function finKidsHTML(){
   if(!S.kids.length)return `<div class="row" style="gap:8px"><span class="lbl" style="margin:0">Lyssnarens ålder</span><select id="ageSel2">${Array.from({length:12},(_,i)=>`<option ${S.age===i+1?'selected':''}>${i+1}</option>`).join('')}</select></div>`;
@@ -1751,7 +1847,7 @@ function normalize(raw,c){
   return mkStory(c,{title:String(raw.title||'En ny saga'),dedication:String(raw.dedication||''),pages,summary:String(raw.summary||''),next:c.ending==='cliff'&&Array.isArray(raw.next)?raw.next.slice(0,3).map(String):[]});
 }
 function mkStory(c,b){
-  const sq=c.sequel;
+  const sq=c.sequel;if(c.wish){const w=c.wish.replace(/\s+/g,' ').trim().slice(0,140);const who=(c.kidChars||[]).map(k=>k.name).filter(Boolean);b={...b,dedication:`”${cap(w)}” – berättat av ${who.length?who.join(' och '):'dig'}`};S.wish='';S.told=''}
   return{id:uid(),...b,kidChars:c.kidChars||[],themes:c.themes,names:c.names,ending:c.ending,kidIds:c.kidIds,createdAt:Date.now(),offline:!!b.offline,
     series:{id:sq?sq.sid:uid(),ep:sq?sq.ep:1,history:sq?sq.history:[]},
     ctx:{kidChars:c.kidChars||[],themes:c.themes,names:c.names,descs:c.descs||{},extra:c.extra,kidIds:c.kidIds,kids:c.kids,ages:c.ages,pages:c.pages,wpp:c.wpp,minutes:c.minutes}};
@@ -2182,7 +2278,7 @@ const LT={ac:null,
   t8(){Unlock.start();setTimeout(()=>{this.t1();setTimeout(()=>this.r(8,document.getElementById('lt-1').textContent),500)},300)},
   diag(){let all=0,sv=0;try{const v=speechSynthesis.getVoices();all=v.length;sv=v.filter(x=>/^sv/i.test(x.lang)).length}catch(e){}const os=(navigator.userAgent.match(/(iPhone OS [\d_]+|iPad; CPU OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0].replace(/_/g,'.');return `Talsyntes: ${'speechSynthesis' in window?'finns':'saknas'} · röster: ${all} (svenska: ${sv}) · ${os}`}
 };
-function soundTestHTML(){return `<details class="ltest"><summary>Hör du inget? <small style="opacity:.6">(v42)</small></summary><ol class="mini sthelp"><li>Höj volymen.</li><li>På iPhone: slå av ljudlöst-knappen på sidan av telefonen.</li><li>Tryck här och lyssna: <button class="kc" data-lt="7">Testa ljudet</button> <span class="mini" id="lt-7"></span></li></ol></details>`}
+function soundTestHTML(){return `<details class="ltest"><summary>Hör du inget? <small style="opacity:.6">(v43)</small></summary><ol class="mini sthelp"><li>Höj volymen.</li><li>På iPhone: slå av ljudlöst-knappen på sidan av telefonen.</li><li>Tryck här och lyssna: <button class="kc" data-lt="7">Testa ljudet</button> <span class="mini" id="lt-7"></span></li></ol></details>`}
 
 /* ============ film export ============ */
 const FW=1080,FH=1350,IX=60,IY=60,IW=960,IH=720;
