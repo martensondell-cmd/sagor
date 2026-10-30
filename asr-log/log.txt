@@ -1,0 +1,259 @@
+=== pip install -q huggingface_hub 'optimum[onnxruntime]==1.24.0' 'transformers==4.48.3' onnx onnxruntime torch --extra-index-url https://download.pytorch.org/whl/cpu
+--- exit 0
+=== python -c "from huggingface_hub import list_repo_files as l; [print(r, l(r)) for r in ['KBLab/kb-whisper-tiny','KBLab/kb-whisper-base']]"
+KBLab/kb-whisper-tiny ['.gitattributes', 'README.md', 'added_tokens.json', 'config.json', 'generation_config.json', 'ggml-model-q5_0.bin', 'ggml-model.bin', 'merges.txt', 'model.bin', 'model.safetensors', 'normalizer.json', 'onnx/decoder_model.onnx', 'onnx/decoder_model_bnb4.onnx', 'onnx/decoder_model_fp16.onnx', 'onnx/decoder_model_int8.onnx', 'onnx/decoder_model_merged.onnx', 'onnx/decoder_model_merged_bnb4.onnx', 'onnx/decoder_model_merged_fp16.onnx', 'onnx/decoder_model_merged_int8.onnx', 'onnx/decoder_model_merged_q4.onnx', 'onnx/decoder_model_merged_q4f16.onnx', 'onnx/decoder_model_merged_quantized.onnx', 'onnx/decoder_model_merged_uint8.onnx', 'onnx/decoder_model_q4.onnx', 'onnx/decoder_model_q4f16.onnx', 'onnx/decoder_model_quantized.onnx', 'onnx/decoder_model_uint8.onnx', 'onnx/decoder_with_past_model.onnx', 'onnx/decoder_with_past_model_bnb4.onnx', 'onnx/decoder_with_past_model_fp16.onnx', 'onnx/decoder_with_past_model_int8.onnx', 'onnx/decoder_with_past_model_q4.onnx', 'onnx/decoder_with_past_model_q4f16.onnx', 'onnx/decoder_with_past_model_quantized.onnx', 'onnx/decoder_with_past_model_uint8.onnx', 'onnx/encoder_model.onnx', 'onnx/encoder_model_bnb4.onnx', 'onnx/encoder_model_fp16.onnx', 'onnx/encoder_model_int8.onnx', 'onnx/encoder_model_q4.onnx', 'onnx/encoder_model_q4f16.onnx', 'onnx/encoder_model_quantized.onnx', 'onnx/encoder_model_uint8.onnx', 'preprocessor_config.json', 'special_tokens_map.json', 'tokenizer.json', 'tokenizer_config.json', 'vocab.json', 'vocabulary.json']
+KBLab/kb-whisper-base ['.gitattributes', 'README.md', 'added_tokens.json', 'config.json', 'generation_config.json', 'ggml-model-q5_0.bin', 'ggml-model.bin', 'merges.txt', 'model.bin', 'model.safetensors', 'normalizer.json', 'onnx/decoder_model.onnx', 'onnx/decoder_model_bnb4.onnx', 'onnx/decoder_model_fp16.onnx', 'onnx/decoder_model_int8.onnx', 'onnx/decoder_model_merged.onnx', 'onnx/decoder_model_merged_bnb4.onnx', 'onnx/decoder_model_merged_fp16.onnx', 'onnx/decoder_model_merged_int8.onnx', 'onnx/decoder_model_merged_q4.onnx', 'onnx/decoder_model_merged_q4f16.onnx', 'onnx/decoder_model_merged_quantized.onnx', 'onnx/decoder_model_merged_uint8.onnx', 'onnx/decoder_model_q4.onnx', 'onnx/decoder_model_q4f16.onnx', 'onnx/decoder_model_quantized.onnx', 'onnx/decoder_model_uint8.onnx', 'onnx/decoder_with_past_model.onnx', 'onnx/decoder_with_past_model_bnb4.onnx', 'onnx/decoder_with_past_model_fp16.onnx', 'onnx/decoder_with_past_model_int8.onnx', 'onnx/decoder_with_past_model_q4.onnx', 'onnx/decoder_with_past_model_q4f16.onnx', 'onnx/decoder_with_past_model_quantized.onnx', 'onnx/decoder_with_past_model_uint8.onnx', 'onnx/encoder_model.onnx', 'onnx/encoder_model_bnb4.onnx', 'onnx/encoder_model_fp16.onnx', 'onnx/encoder_model_int8.onnx', 'onnx/encoder_model_q4.onnx', 'onnx/encoder_model_q4f16.onnx', 'onnx/encoder_model_quantized.onnx', 'onnx/encoder_model_uint8.onnx', 'preprocessor_config.json', 'special_tokens_map.json', 'tokenizer.json', 'tokenizer_config.json', 'vocab.json', 'vocabulary.json']
+--- exit 0
+=== mkdir -p work && cd work && npm init -y >/dev/null && npm i @huggingface/transformers@3.7.5 node-wav >/dev/null && ls node_modules/@huggingface/transformers/dist && ls -la node_modules/onnxruntime-web/dist | grep -E 'wasm|mjs' && grep '"version"' node_modules/onnxruntime-web/package.json
+npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+ort-wasm-simd-threaded.jsep.mjs
+ort-wasm-simd-threaded.jsep.wasm
+transformers.js
+transformers.js.map
+transformers.min.js
+transformers.min.js.map
+transformers.node.cjs
+transformers.node.cjs.map
+transformers.node.min.cjs
+transformers.node.min.cjs.map
+transformers.node.min.mjs
+transformers.node.min.mjs.map
+transformers.node.mjs
+transformers.node.mjs.map
+transformers.web.js
+transformers.web.js.map
+transformers.web.min.js
+transformers.web.min.js.map
+-rw-r--r-- 1 runner runner    44484 Oct 30 14:19 ort-wasm-simd-threaded.jsep.mjs
+-rw-r--r-- 1 runner runner 21596019 Oct 30 14:19 ort-wasm-simd-threaded.jsep.wasm
+-rw-r--r-- 1 runner runner    20856 Oct 30 14:19 ort-wasm-simd-threaded.mjs
+-rw-r--r-- 1 runner runner 11133407 Oct 30 14:19 ort-wasm-simd-threaded.wasm
+-rw-r--r-- 1 runner runner   832611 Oct 30 14:19 ort.all.bundle.min.mjs
+-rw-r--r-- 1 runner runner  3114304 Oct 30 14:19 ort.all.bundle.min.mjs.map
+-rw-r--r-- 1 runner runner   789326 Oct 30 14:19 ort.all.min.mjs
+-rw-r--r-- 1 runner runner  2998810 Oct 30 14:19 ort.all.min.mjs.map
+-rw-r--r-- 1 runner runner  5655719 Oct 30 14:19 ort.all.mjs
+-rw-r--r-- 1 runner runner   398170 Oct 30 14:19 ort.bundle.min.mjs
+-rw-r--r-- 1 runner runner  1464642 Oct 30 14:19 ort.bundle.min.mjs.map
+-rw-r--r-- 1 runner runner   355057 Oct 30 14:19 ort.min.mjs
+-rw-r--r-- 1 runner runner  1350733 Oct 30 14:19 ort.min.mjs.map
+-rw-r--r-- 1 runner runner  2528294 Oct 30 14:19 ort.mjs
+-rw-r--r-- 1 runner runner    25219 Oct 30 14:19 ort.node.min.mjs
+-rw-r--r-- 1 runner runner   142345 Oct 30 14:19 ort.node.min.mjs.map
+-rw-r--r-- 1 runner runner    48022 Oct 30 14:19 ort.wasm.bundle.min.mjs
+-rw-r--r-- 1 runner runner   305752 Oct 30 14:19 ort.wasm.bundle.min.mjs.map
+-rw-r--r-- 1 runner runner   553484 Oct 30 14:19 ort.wasm.js
+-rw-r--r-- 1 runner runner    48076 Oct 30 14:19 ort.wasm.min.js
+-rw-r--r-- 1 runner runner   305760 Oct 30 14:19 ort.wasm.min.js.map
+-rw-r--r-- 1 runner runner    48008 Oct 30 14:19 ort.wasm.min.mjs
+-rw-r--r-- 1 runner runner   305752 Oct 30 14:19 ort.wasm.min.mjs.map
+-rw-r--r-- 1 runner runner   545806 Oct 30 14:19 ort.wasm.mjs
+-rw-r--r-- 1 runner runner   454034 Oct 30 14:19 ort.webgl.min.mjs
+-rw-r--r-- 1 runner runner  1814538 Oct 30 14:19 ort.webgl.min.mjs.map
+-rw-r--r-- 1 runner runner  3362598 Oct 30 14:19 ort.webgl.mjs
+-rw-r--r-- 1 runner runner   398191 Oct 30 14:19 ort.webgpu.bundle.min.mjs
+-rw-r--r-- 1 runner runner  1464642 Oct 30 14:19 ort.webgpu.bundle.min.mjs.map
+-rw-r--r-- 1 runner runner   355071 Oct 30 14:19 ort.webgpu.min.mjs
+-rw-r--r-- 1 runner runner  1350734 Oct 30 14:19 ort.webgpu.min.mjs.map
+-rw-r--r-- 1 runner runner  2528301 Oct 30 14:19 ort.webgpu.mjs
+  "version": "1.22.0-dev.20250409-89f8206ba4",
+--- exit 0
+=== optimum-cli export onnx --model KBLab/kb-whisper-tiny --task automatic-speech-recognition-with-past out/kb-whisper-tiny
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/bin/optimum-cli", line 6, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/commands/optimum_cli.py", line 208, in main
+    service.run()
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/commands/export/onnx.py", line 265, in run
+    main_export(
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/exporters/onnx/__main__.py", line 375, in main_export
+    onnx_export_from_model(
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/exporters/onnx/convert.py", line 1175, in onnx_export_from_model
+    _, onnx_outputs = export_models(
+                      ^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/exporters/onnx/convert.py", line 762, in export_models
+    export(
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/exporters/onnx/convert.py", line 866, in export
+    export_output = export_pytorch(
+                    ^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/exporters/onnx/convert.py", line 563, in export_pytorch
+    onnx_export(
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/__init__.py", line 289, in export
+    from torch.onnx._internal.exporter import _compat
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/_internal/exporter/_compat.py", line 16, in <module>
+    from torch.onnx._internal.exporter import (
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/_internal/exporter/_core.py", line 19, in <module>
+    import onnxscript
+ModuleNotFoundError: No module named 'onnxscript'
+--- exit 1
+=== ls -la out/kb-whisper-tiny
+total 5732
+drwxr-xr-x 2 runner runner    4096 Oct 30 14:19 .
+drwxr-xr-x 3 runner runner    4096 Oct 30 14:19 ..
+-rw-r--r-- 1 runner runner   34604 Oct 30 14:19 added_tokens.json
+-rw-r--r-- 1 runner runner    3527 Oct 30 14:19 config.json
+-rw-r--r-- 1 runner runner    3693 Oct 30 14:19 generation_config.json
+-rw-r--r-- 1 runner runner  493869 Oct 30 14:19 merges.txt
+-rw-r--r-- 1 runner runner   52666 Oct 30 14:19 normalizer.json
+-rw-r--r-- 1 runner runner     339 Oct 30 14:19 preprocessor_config.json
+-rw-r--r-- 1 runner runner    2194 Oct 30 14:19 special_tokens_map.json
+-rw-r--r-- 1 runner runner 3931232 Oct 30 14:19 tokenizer.json
+-rw-r--r-- 1 runner runner  282698 Oct 30 14:19 tokenizer_config.json
+-rw-r--r-- 1 runner runner 1036584 Oct 30 14:19 vocab.json
+--- exit 0
+=== python - <<'PY'
+import os,glob,shutil
+from onnxruntime.quantization import quantize_dynamic, QuantType
+d='out/kb-whisper-tiny'
+os.makedirs(d+'/onnx',exist_ok=True)
+for n in ['encoder_model','decoder_model_merged','decoder_model','decoder_with_past_model']:
+    f=d+'/'+n+'.onnx'
+    if os.path.exists(f):
+        quantize_dynamic(f, d+'/onnx/'+n+'_quantized.onnx', weight_type=QuantType.QUInt8, extra_options={'EnableSubgraph':True})
+        print('kvantiserad',n, os.path.getsize(d+'/onnx/'+n+'_quantized.onnx'))
+PY
+[0;93m2026-10-30 14:19:55.479901044 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+--- exit 0
+=== optimum-cli export onnx --model KBLab/kb-whisper-base --task automatic-speech-recognition-with-past out/kb-whisper-base
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/bin/optimum-cli", line 6, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/commands/optimum_cli.py", line 208, in main
+    service.run()
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/commands/export/onnx.py", line 265, in run
+    main_export(
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/exporters/onnx/__main__.py", line 375, in main_export
+    onnx_export_from_model(
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/exporters/onnx/convert.py", line 1175, in onnx_export_from_model
+    _, onnx_outputs = export_models(
+                      ^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/exporters/onnx/convert.py", line 762, in export_models
+    export(
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/exporters/onnx/convert.py", line 866, in export
+    export_output = export_pytorch(
+                    ^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/optimum/exporters/onnx/convert.py", line 563, in export_pytorch
+    onnx_export(
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/__init__.py", line 289, in export
+    from torch.onnx._internal.exporter import _compat
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/_internal/exporter/_compat.py", line 16, in <module>
+    from torch.onnx._internal.exporter import (
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/_internal/exporter/_core.py", line 19, in <module>
+    import onnxscript
+ModuleNotFoundError: No module named 'onnxscript'
+--- exit 1
+=== ls -la out/kb-whisper-base
+total 5732
+drwxr-xr-x 2 runner runner    4096 Oct 30 14:20 .
+drwxr-xr-x 4 runner runner    4096 Oct 30 14:20 ..
+-rw-r--r-- 1 runner runner   34604 Oct 30 14:20 added_tokens.json
+-rw-r--r-- 1 runner runner    3587 Oct 30 14:20 config.json
+-rw-r--r-- 1 runner runner    3753 Oct 30 14:20 generation_config.json
+-rw-r--r-- 1 runner runner  493869 Oct 30 14:20 merges.txt
+-rw-r--r-- 1 runner runner   52666 Oct 30 14:20 normalizer.json
+-rw-r--r-- 1 runner runner     339 Oct 30 14:20 preprocessor_config.json
+-rw-r--r-- 1 runner runner    2194 Oct 30 14:20 special_tokens_map.json
+-rw-r--r-- 1 runner runner 3931232 Oct 30 14:20 tokenizer.json
+-rw-r--r-- 1 runner runner  282698 Oct 30 14:20 tokenizer_config.json
+-rw-r--r-- 1 runner runner 1036584 Oct 30 14:20 vocab.json
+--- exit 0
+=== python - <<'PY'
+import os,glob,shutil
+from onnxruntime.quantization import quantize_dynamic, QuantType
+d='out/kb-whisper-base'
+os.makedirs(d+'/onnx',exist_ok=True)
+for n in ['encoder_model','decoder_model_merged','decoder_model','decoder_with_past_model']:
+    f=d+'/'+n+'.onnx'
+    if os.path.exists(f):
+        quantize_dynamic(f, d+'/onnx/'+n+'_quantized.onnx', weight_type=QuantType.QUInt8, extra_options={'EnableSubgraph':True})
+        print('kvantiserad',n, os.path.getsize(d+'/onnx/'+n+'_quantized.onnx'))
+PY
+[0;93m2026-10-30 14:20:27.962931536 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+--- exit 0
+=== pip install -q piper-tts && python -c "from huggingface_hub import hf_hub_download as h; [print(h('rhasspy/piper-voices',f,local_dir='voices')) for f in ['sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx','sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx.json']]"
+voices/sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx
+voices/sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx.json
+--- exit 0
+[0;93m2026-10-30 14:20:32.070547625 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+[0;93m2026-10-30 14:20:33.853894362 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+[0;93m2026-10-30 14:20:35.619364784 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+[0;93m2026-10-30 14:20:37.489340763 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+[0;93m2026-10-30 14:20:39.368715890 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+=== ls -la asr-test; cat asr-test/texter.txt
+total 516
+drwxr-xr-x  2 runner runner   4096 Oct 30 14:20 .
+drwxr-xr-x 10 runner runner   4096 Oct 30 14:20 ..
+-rw-r--r--  1 runner runner  82988 Oct 30 14:20 s1.wav
+-rw-r--r--  1 runner runner  69164 Oct 30 14:20 s2.wav
+-rw-r--r--  1 runner runner 126508 Oct 30 14:20 s3.wav
+-rw-r--r--  1 runner runner 159276 Oct 30 14:20 s4.wav
+-rw-r--r--  1 runner runner  72748 Oct 30 14:20 s5.wav
+-rw-r--r--  1 runner runner    184 Oct 30 14:20 texter.txt
+s1.wav: En drake och min katt.
+s2.wav: I skogen på månen.
+s3.wav: Draken ska flyga till en stor fest.
+s4.wav: En prinsessa och en hund som heter Sixten.
+s5.wav: Hemma under sängen.
+--- exit 0
+=== cd work && node t.mjs
+kb-whisper-tiny FEL Error: `local_files_only=true` or `env.allowRemoteModels=false` and file was not found locally at "../out/kb-whisper-tiny/onnx/encoder_model_quantized.onnx".
+    at getModelFile (file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:32014:27)
+    at async getSession (file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:7652:28)
+    at async file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:7669:73
+    at async Promise.all (index 0)
+    at async constructSessions (file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:7667:31)
+    at async Promise.all (index 0)
+    at async WhisperForConditionalGeneration.from_pretrained (file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:8471:20)
+    at async AutoModelForSpeechSeq2Seq.from_pretrained (file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:15028:20)
+    at async file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:25000:33
+kb-whisper-base FEL Error: `local_files_only=true` or `env.allowRemoteModels=false` and file was not found locally at "../out/kb-whisper-base/onnx/encoder_model_quantized.onnx".
+    at getModelFile (file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:32014:27)
+    at async getSession (file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:7652:28)
+    at async file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:7669:73
+    at async Promise.all (index 0)
+    at async constructSessions (file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:7667:31)
+    at async Promise.all (index 0)
+    at async WhisperForConditionalGeneration.from_pretrained (file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:8471:20)
+    at async AutoModelForSpeechSeq2Seq.from_pretrained (file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:15028:20)
+    at async file:///home/runner/work/sagor/sagor/work/node_modules/@huggingface/transformers/dist/transformers.node.mjs:25000:33
+--- exit 0
+=== du -ah app/asr asr-test
+856K	app/asr/transformers.min.js
+280K	app/asr/models/kb-whisper-tiny/tokenizer_config.json
+36K	app/asr/models/kb-whisper-tiny/added_tokens.json
+4.0K	app/asr/models/kb-whisper-tiny/config.json
+52K	app/asr/models/kb-whisper-tiny/normalizer.json
+3.8M	app/asr/models/kb-whisper-tiny/tokenizer.json
+4.0K	app/asr/models/kb-whisper-tiny/onnx
+4.0K	app/asr/models/kb-whisper-tiny/generation_config.json
+1016K	app/asr/models/kb-whisper-tiny/vocab.json
+4.0K	app/asr/models/kb-whisper-tiny/preprocessor_config.json
+4.0K	app/asr/models/kb-whisper-tiny/special_tokens_map.json
+5.2M	app/asr/models/kb-whisper-tiny
+280K	app/asr/models/kb-whisper-base/tokenizer_config.json
+36K	app/asr/models/kb-whisper-base/added_tokens.json
+4.0K	app/asr/models/kb-whisper-base/config.json
+52K	app/asr/models/kb-whisper-base/normalizer.json
+3.8M	app/asr/models/kb-whisper-base/tokenizer.json
+4.0K	app/asr/models/kb-whisper-base/onnx
+4.0K	app/asr/models/kb-whisper-base/generation_config.json
+1016K	app/asr/models/kb-whisper-base/vocab.json
+4.0K	app/asr/models/kb-whisper-base/preprocessor_config.json
+4.0K	app/asr/models/kb-whisper-base/special_tokens_map.json
+5.2M	app/asr/models/kb-whisper-base
+11M	app/asr/models
+44K	app/asr/ort-wasm-simd-threaded.jsep.mjs
+21M	app/asr/ort-wasm-simd-threaded.jsep.wasm
+11M	app/asr/ort-wasm-simd-threaded.wasm
+24K	app/asr/ort-wasm-simd-threaded.mjs
+43M	app/asr
+72K	asr-test/s5.wav
+68K	asr-test/s2.wav
+156K	asr-test/s4.wav
+4.0K	asr-test/texter.txt
+84K	asr-test/s1.wav
+124K	asr-test/s3.wav
+512K	asr-test
+--- exit 0
