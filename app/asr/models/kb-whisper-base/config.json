@@ -270,7 +270,8 @@
     220,
     50257
   ],
-  "transformers_version": "4.48.3",
+  "torch_dtype": "float32",
+  "transformers_version": "4.49.0",
   "use_cache": true,
   "use_weighted_layer_sum": false,
   "vocab_size": 51865

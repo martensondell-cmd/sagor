@@ -8,3 +8,8 @@ s2.wav: I skogen på månen.
 s3.wav: Draken ska flyga till en stor fest.
 s4.wav: En prinsessa och en hund som heter Sixten.
 s5.wav: Hemma under sängen.
+s1.wav: En drake och min katt.
+s2.wav: I skogen på månen.
+s3.wav: Draken ska flyga till en stor fest.
+s4.wav: En prinsessa och en hund som heter Sixten.
+s5.wav: Hemma under sängen.
