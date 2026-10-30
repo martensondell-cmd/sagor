@@ -945,7 +945,8 @@ button,a,.tile,.rib,.chipbtn,.btn,.round{touch-action:manipulation}
 
 /* ===== Berätta-läget ===== */
 .sheet.talk{width:min(440px,100%);align-items:center;text-align:center;gap:12px;position:relative}
-.tkx{position:absolute;top:10px;right:10px;min-width:40px}
+.tkx{position:absolute;top:10px;right:10px;min-width:40px;z-index:3}
+.sheet.talk .tkhead{padding-right:34px;box-sizing:border-box}
 .tkdots{display:flex;gap:8px}.tkdots i{width:12px;height:12px;border-radius:50%;border:2.5px solid var(--ink);background:transparent}.tkdots i.on{background:var(--pick)}.tkdots i.done{background:var(--ink)}
 .tkhead{display:flex;gap:10px;align-items:center;text-align:left;width:100%}
 .tkhead .tkowl,.tkhead svg{width:64px;height:64px;flex:none}
@@ -1575,7 +1576,7 @@ function renderHome(){renderKidWho();
 }
 $('#readExample').onclick=()=>openReader(EXAMPLE);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-talk]');if(b){e.preventDefault();TALK.open()}});
-addEventListener('DOMContentLoaded',()=>{if(!ASR.canMic())document.body.classList.add('nomic')});setTimeout(()=>{if(!ASR.canMic())document.body.classList.add('nomic')},0);
+
 
 /* ============ Berätta: barnet pratar, appen lyssnar och hittar bilderna ============ */
 const TALKW={urtid:'urtid',vikingatid:'viking',riddartid:'riddartid|medeltid',farfar:'farfars tid|förr i tiden',nutid:'=idag|nutid|i dag',framtid:'framtid',stenalder:'stenålder',sommarlov:'sommar',jul:'jul|tomte',midsommar:'midsommar',halloween:'hallowe|hallowee',vinter:'vinter|snö',host:'höst',varen:'=våren|våras',pask:'påsk',fodelsedag:'födelsedag|kalas|fyller år',fullmane:'fullmån',
@@ -1656,9 +1657,18 @@ const ASR={model:'kb-whisper-base',dtype:{encoder_model:'q8',decoder_model_merge
     if(this.JUNK.test(t))t='';return t.replace(/\s+/g,' ')}};
 const TALK={q:[{k:'vem',t:'Vem ska vara med i sagan?',hint:'Till exempel en drake, en prinsessa eller din katt.'},{k:'var',t:'Var ska sagan hända?',hint:'I skogen, på månen eller hemma under sängen?'},{k:'vad',t:'Vad ska hända i sagan?',hint:'Berätta vad som händer – vad som helst!'}],
   i:0,ans:{},st:'idle',
-  open(){if(!ASR.canMic()){toast('Berätta med rösten finns i appen på hemskärmen.');return}
+  open(){if(!ASR.canMic()){this.elsewhere();return}
     Voice.stop();this.i=0;this.ans={};this.found=[];this.kids=[];this.name='';this.st='idle';this.err='';
     ASR.load(p=>this.prog(p)).catch(()=>{});this.render();this.ask()},
+  elsewhere(){const url='https://martensondell-cmd.github.io/sagor/app/';
+    $('#modal').innerHTML=`<div class="mback" role="dialog" aria-modal="true" aria-labelledby="tkq"><div class="sheet talk">
+      <button class="chipbtn tkx" id="tkClose" aria-label="Stäng">✕</button>
+      <div class="tkhead">${ic('uggla','tkowl')}<div class="tkbub"><h2 id="tkq">Prata med mig i appen!</h2><p class="mini">Här inne får mikrofonen inte användas. Öppna Sagoverkstaden-appen, så kan du berätta din saga med rösten.</p></div></div>
+      <div class="tkmic" aria-hidden="true" style="opacity:.5"><span class="tkemo">🎤</span></div>
+      <a class="kbig kgo" id="tkOpen" href="${url}" target="_blank" rel="noopener" style="text-decoration:none;width:100%"><span>📱</span>Öppna appen</a>
+      <p class="mini">Lägg appen på hemskärmen: öppna länken i Safari → Dela → Lägg till på hemskärmen.</p>
+    </div></div>`;
+    $('#modal').onclick=e=>{if(e.target.classList.contains('mback')||e.target.closest('#tkClose'))$('#modal').innerHTML=''}},
   say(t){try{if('speechSynthesis' in window&&LS.get('autoRead',true)){Unlock.start();speechSynthesis.cancel();const v=VOICES.find(x=>x.k===S.voice)||VOICES[0];Voice.say(Voice.utter(t,v))}}catch(e){}},
   ask(){this.say(this.q[this.i].t)},
   prog(p){const el=$('#tkProg');if(!el)return;el.hidden=p>=100||ASR.pipe!=null;el.querySelector('i').style.width=p+'%';el.querySelector('span').textContent=`Öronen vaknar … ${p} %`},
