@@ -1076,7 +1076,7 @@ addEventListener('error',e=>DBG.log('FEL '+(e.message||'okänt')+' rad '+(e.line
 addEventListener('unhandledrejection',e=>{const r=e.reason;DBG.log('AVVISAD '+(r&&(r.message||r.code)||String(r)))});
 addEventListener('pagehide',()=>DBG.log('sidan stängs/laddas om'));
 document.addEventListener('visibilitychange',()=>DBG.log('synlighet: '+document.visibilityState));
-DBG.log('start v44 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
+DBG.log('start v45 '+(navigator.userAgent.match(/(iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0]);
 </script>
 <script>
 /* ============ helpers ============ */
@@ -1571,7 +1571,7 @@ const TALKW={urtid:'urtid',vikingatid:'viking',riddartid:'riddartid|medeltid',fa
  sverige:'sverige',kina:'kina',egypten:'egypt|pyramid',frankrike:'frankrike|paris',arktis:'arktis|nordpol|isbjörn',manen:'=månen|=månen',mars:'=mars',sagolandet:'sagoland',japan:'japan',italien:'italien|pizza',australien:'australien|känguru',amazonas:'amazon',atlantis:'atlantis',godisland:'godis',indien:'indien',brasilien:'brasilien',island:'=island',newyork:'new york',
  drake:'=drake|=draken|=drakar|=drakarna',haxa:'=häxa|=häxan|=häxor',monster:'monster',spindel:'spindel',haj:'=haj|=hajen|=hajar',krokodil:'krokodil',dino:'dino',spoke:'spök',troll:'=troll|=trollet|=trollen',varg:'=varg|=vargen|=vargar',robot:'=robot|=roboten|=robotar',blackfisk:'bläckfisk',mumie:'mumie',vampyr:'vampyr',jatte:'=jätte|=jätten|=jättar',alien:'rymdvarelse|utomjording|alien',orm:'=orm|=ormen|=ormar',trollkarl:'trollkarl',sjoodjur:'sjöodjur',skuggan:'=skugga|=skuggan',askmoln:'åska|åskmoln',snohaxa:'snöhäxa',
  riddare:'riddare',superhjalte:'superhjält',prinsessa:'prinsess',prins:'=prins|=prinsen',pappa:'pappa',mamma:'mamma',mormor:'mormor|farmor',morfar:'morfar|=farfar',pirat:'pirat|sjörövare',astronaut:'astronaut',detektiv:'detektiv',brandman:'brandm',ninja:'ninja',sjojungfru:'sjöjungfru',uppfinnare:'uppfinnare',kock:'=kock|=kocken',veterinar:'djurdoktor|veterinär',syskon:'storasyster|storebror|syskon',magiker:'magiker',
- hund:'=hund|=hunden|=hundar|valp',katt:'=katt|=katten|=katter|kisse',hast:'häst|ponny',enhorning:'enhörning',uggla:'uggla|ugglan',fe:'=fe|=fen|=feen|älva',kanin:'kanin',nalle:'nalle|björn',pingvin:'pingvin',apa:'=apa|=apan|=apor',groda:'groda|grodan',elefant:'elefant',drakunge:'drakunge|bebisdrake|liten drake',robotkompis:'robotkompis',igelkott:'igelkott',skoldpadda:'sköldpadd',papegoja:'papegoj',delfin:'delfin',
+ hund:'=hund|=hunden|=hundar|=hum|valp',katt:'=katt|=katten|=katter|kisse',hast:'häst|ponny',enhorning:'enhörning',uggla:'uggla|ugglan',fe:'=fe|=fen|=feen|älva',kanin:'kanin',nalle:'nalle|björn',pingvin:'pingvin',apa:'=apa|=apan|=apor',groda:'groda|grodan',elefant:'elefant',drakunge:'drakunge|bebisdrake|liten drake',robotkompis:'robotkompis',igelkott:'igelkott',skoldpadda:'sköldpadd',papegoja:'papegoj',delfin:'delfin',
  roligt:'rolig',mysigt:'mysig',spanning:'spännande',magiskt:'magisk|=magi',aventyr:'äventyr',vanskap:'vänskap|bästa vän',tokigt:'tokig|knasig',modigt:'modig',lugnt:'=lugn|=lugnt',busigt:'busig',romans:'kärlek|=kära|=kär',hemligt:'hemlig',mystiskt:'mystisk',
  lyckligt:'lycklig',godnatt:'somna|=sova',fest:'=fest|=festen|=fäste|=kalaset',skratt:'skratt',overrask:'överrask',
  trollstav:'trollstav',matta:'flygande matta|=matta|=mattan',mantel:'osynlig',tidsmaskin:'tidsmaskin',dryck:'krymp|trolldryck',ritpenna:'penna|pennan',agg:'=ägg|=ägget',kompass:'kompass',onskesten:'önskesten',spegel:'spegel'};
@@ -1610,9 +1610,13 @@ const ASR={model:'kb-whisper-base',dtype:{encoder_model:'q8',decoder_model_merge
     this.p.catch(e=>{DBG.log('asr load: '+(e&&e.message));this.p=null});return this.p},
   /* inspelning: rått ljud via Web Audio (fungerar i iPhone-appen på hemskärmen) */
   rec:null,
-  start(cb){const AC=window.AudioContext||window.webkitAudioContext;const ac=new AC();try{ac.resume()}catch(e){}
+  start(cb){/* iPhone: ljudläget 'playback' (som uppläsningen använder) stänger av mikrofonen – byt till inspelningsläge */
+    try{Unlock.stop()}catch(e){}try{if(navigator.audioSession)navigator.audioSession.type='play-and-record'}catch(e){}
+    const AC=window.AudioContext||window.webkitAudioContext;const ac=new AC();try{ac.resume()}catch(e){}
     const R=this.rec={ac,chunks:[],sr:ac.sampleRate,spoke:false,quiet:0,t0:performance.now(),floor:0,n:0,done:false,cb};
-    return navigator.mediaDevices.getUserMedia({audio:window.ASR_RAW?{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1}:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}}).then(stream=>{
+    const md=navigator.mediaDevices;
+    return md.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}).catch(e=>{DBG.log('mic 1: '+(e&&e.name)+' '+(e&&e.message));if(e&&e.name==='NotAllowedError')throw e;
+        try{if(navigator.audioSession)navigator.audioSession.type='auto'}catch(_){}return md.getUserMedia({audio:true})}).then(stream=>{
       if(R.done){stream.getTracks().forEach(t=>t.stop());return}
       R.stream=stream;try{ac.resume()}catch(e){}
       const src=ac.createMediaStreamSource(stream),pr=ac.createScriptProcessor(4096,1,1);R.src=src;R.pr=pr;
@@ -1628,6 +1632,7 @@ const ASR={model:'kb-whisper-base',dtype:{encoder_model:'q8',decoder_model_merge
   stop(why){const R=this.rec;if(!R||R.done)return;R.done=true;this.rec=null;
     try{R.pr&&(R.pr.onaudioprocess=null);R.src&&R.src.disconnect();R.pr&&R.pr.disconnect()}catch(e){}
     try{R.stream&&R.stream.getTracks().forEach(t=>t.stop())}catch(e){}try{R.ac.close()}catch(e){}
+    try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
     const n=R.chunks.reduce((a,c)=>a+c.length,0),all=new Float32Array(n);let o=0;R.chunks.forEach(c=>{all.set(c,o);o+=c.length});
     R.cb.stopped&&R.cb.stopped({audio:all,sr:R.sr,spoke:R.spoke,why})},
   async to16kHQ(x,sr){if(sr===16000)return x;try{const O=window.OfflineAudioContext||window.webkitOfflineAudioContext;const n=Math.ceil(x.length*16000/sr);const oc=new O(1,n,16000);const b=oc.createBuffer(1,x.length,sr);b.getChannelData(0).set(x);const src=oc.createBufferSource();src.buffer=b;src.connect(oc.destination);src.start();const r=await oc.startRendering();return r.getChannelData(0)}catch(e){return this.to16k(x,sr)}},
@@ -1677,7 +1682,7 @@ const TALK={q:[{k:'vem',t:'Vem ska vara med i sagan?',hint:'Till exempel en drak
   listen(){const q=this.q[this.i],i0=this.i;try{speechSynthesis.cancel()}catch(e){}Unlock.stop();
     this.st='rec';this.err='';this.setMic();
     ASR.start({level:v=>{const l=$('#tkLvl');if(l)l.style.transform=`scale(${1+v*.9})`},
-      error:e=>{DBG.log('mic: '+(e&&e.name));this.st='idle';this.err=e&&e.name==='NotAllowedError'?'Mikrofonen är inte tillåten. Be en vuxen slå på den.':'Mikrofonen gick inte att starta.';this.setMic();
+      error:e=>{DBG.log('mic: '+(e&&e.name));this.st='idle';this.err=e&&e.name==='NotAllowedError'?'Mikrofonen är inte tillåten. Be en vuxen slå på den.':'Mikrofonen gick inte att starta ('+((e&&(e.name||e.message))||'okänt')+'). Tryck igen!';this.setMic();
         if(e&&e.name==='NotAllowedError')toast('Tillåt mikrofonen: Inställningar → Safari (eller appen) → Mikrofon.')},
       stopped:async r=>{if(this.i!==i0||!$('#tkMicW'))return;
         if(!r.spoke||r.audio.length<r.sr*.4){this.st='idle';this.err='Jag hörde inget. Tryck och prata lite högre!';this.setMic();return}
@@ -2357,7 +2362,7 @@ const LT={ac:null,
   t8(){Unlock.start();setTimeout(()=>{this.t1();setTimeout(()=>this.r(8,document.getElementById('lt-1').textContent),500)},300)},
   diag(){let all=0,sv=0;try{const v=speechSynthesis.getVoices();all=v.length;sv=v.filter(x=>/^sv/i.test(x.lang)).length}catch(e){}const os=(navigator.userAgent.match(/(iPhone OS [\d_]+|iPad; CPU OS [\d_]+|Android [\d.]+|Mac OS X [\d_.]+|Windows NT [\d.]+)/)||[''])[0].replace(/_/g,'.');return `Talsyntes: ${'speechSynthesis' in window?'finns':'saknas'} · röster: ${all} (svenska: ${sv}) · ${os}`}
 };
-function soundTestHTML(){return `<details class="ltest"><summary>Hör du inget? <small style="opacity:.6">(v44)</small></summary><ol class="mini sthelp"><li>Höj volymen.</li><li>På iPhone: slå av ljudlöst-knappen på sidan av telefonen.</li><li>Tryck här och lyssna: <button class="kc" data-lt="7">Testa ljudet</button> <span class="mini" id="lt-7"></span></li></ol></details>`}
+function soundTestHTML(){return `<details class="ltest"><summary>Hör du inget? <small style="opacity:.6">(v45)</small></summary><ol class="mini sthelp"><li>Höj volymen.</li><li>På iPhone: slå av ljudlöst-knappen på sidan av telefonen.</li><li>Tryck här och lyssna: <button class="kc" data-lt="7">Testa ljudet</button> <span class="mini" id="lt-7"></span></li></ol></details>`}
 
 /* ============ film export ============ */
 const FW=1080,FH=1350,IX=60,IY=60,IW=960,IH=720;
