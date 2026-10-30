@@ -21,23 +21,13 @@ jobs:
           mkdir -p asr-log; L=asr-log/log.txt; : > $L
           log(){ echo "=== $*" | tee -a $L; }
           run(){ log "$*"; bash -c "$*" >> $L 2>&1; local r=$?; echo "--- exit $r" >> $L; return $r; }
-          run "pip install -q huggingface_hub 'optimum[onnxruntime]==1.24.0' 'transformers==4.48.3' onnx onnxruntime onnxscript 'torch==2.4.1' --extra-index-url https://download.pytorch.org/whl/cpu"
-          run "python -c \"from huggingface_hub import list_repo_files as l; [print(r, l(r)) for r in ['KBLab/kb-whisper-tiny','KBLab/kb-whisper-base']]\""
-          run "mkdir -p work && cd work && npm init -y >/dev/null && npm i @huggingface/transformers@3.7.5 node-wav >/dev/null && ls node_modules/@huggingface/transformers/dist && ls -la node_modules/onnxruntime-web/dist | grep -E 'wasm|mjs' && grep '\"version\"' node_modules/onnxruntime-web/package.json"
+          run "pip install -q huggingface_hub onnxscript 'torch==2.5.1' --extra-index-url https://download.pytorch.org/whl/cpu"
+          run "mkdir -p work && cd work && npm init -y >/dev/null && npm i @huggingface/transformers@3.7.5 node-wav >/dev/null && grep '\"version\"' node_modules/onnxruntime-web/package.json"
+          run "git clone -q --depth 1 -b 3.7.5 https://github.com/huggingface/transformers.js tjs && cd tjs && pip install -q -r scripts/requirements.txt 'torch==2.5.1' onnxscript --extra-index-url https://download.pytorch.org/whl/cpu"
           for m in tiny base; do
-            run "optimum-cli export onnx --model KBLab/kb-whisper-$m --task automatic-speech-recognition-with-past out/kb-whisper-$m" || true
-            run "ls -la out/kb-whisper-$m" || true
-            run "python - <<'PY'
-          import os,glob,shutil
-          from onnxruntime.quantization import quantize_dynamic, QuantType
-          d='out/kb-whisper-$m'
-          os.makedirs(d+'/onnx',exist_ok=True)
-          for n in ['encoder_model','decoder_model_merged','decoder_model','decoder_with_past_model']:
-              f=d+'/'+n+'.onnx'
-              if os.path.exists(f):
-                  quantize_dynamic(f, d+'/onnx/'+n+'_quantized.onnx', weight_type=QuantType.QUInt8, extra_options={'EnableSubgraph':True})
-                  print('kvantiserad',n, os.path.getsize(d+'/onnx/'+n+'_quantized.onnx'))
-          PY" || true
+            run "cd tjs && python -m scripts.convert --quantize --model_id KBLab/kb-whisper-$m" || true
+            run "ls -la tjs/models/KBLab/kb-whisper-$m tjs/models/KBLab/kb-whisper-$m/onnx" || true
+            mkdir -p out; rm -rf out/kb-whisper-$m; cp -r tjs/models/KBLab/kb-whisper-$m out/ 2>/dev/null || true
           done
           run "pip install -q piper-tts && python -c \"from huggingface_hub import hf_hub_download as h; [print(h('rhasspy/piper-voices',f,local_dir='voices')) for f in ['sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx','sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx.json']]\"" || true
           mkdir -p asr-test; i=0
@@ -73,7 +63,7 @@ jobs:
           cp work/node_modules/@huggingface/transformers/dist/transformers.min.js app/asr/
           cp work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.mjs work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm app/asr/
           cp work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs work/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm app/asr/
-          for m in tiny base; do s=out/kb-whisper-$m; [ -d $s/onnx ] || continue; d=app/asr/models/kb-whisper-$m; mkdir -p $d/onnx; cp $s/*.json $d/; cp $s/onnx/*_quantized.onnx $d/onnx/; done
+          for m in tiny base; do s=out/kb-whisper-$m; [ -d $s/onnx ] || continue; d=app/asr/models/kb-whisper-$m; mkdir -p $d/onnx; cp $s/*.json $d/; rm -rf $d/onnx; mkdir -p $d/onnx; cp $s/onnx/encoder_model_quantized.onnx $s/onnx/decoder_model_merged_quantized.onnx $d/onnx/; done
           run "du -ah app/asr asr-test" || true
           git config user.name "github-actions"; git config user.email "actions@github.com"
           find app/asr -size +95M -print -delete >> $L
