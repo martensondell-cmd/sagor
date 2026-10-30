@@ -18,7 +18,7 @@ jobs:
       - name: Allt i ett (loggas till asr-log)
         shell: bash
         run: |
-          mkdir -p asr-log; L=asr-log/log.txt; : > $L
+          set +e; mkdir -p asr-log; L=asr-log/log.txt; : > $L
           log(){ echo "=== $*" | tee -a $L; }
           run(){ log "$*"; bash -c "$*" >> $L 2>&1; local r=$?; echo "--- exit $r" >> $L; return $r; }
           run "pip install -q huggingface_hub onnxscript 'torch==2.5.1' --extra-index-url https://download.pytorch.org/whl/cpu"
