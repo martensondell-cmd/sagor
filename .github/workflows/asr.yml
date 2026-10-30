@@ -75,3 +75,12 @@ jobs:
           git add -A app/asr asr-test asr-log
           git commit -qm "Svensk taligenkänning: modell, testljud och logg" || true
           git pull --rebase -q; git push
+      - name: Spara loggen på egen gren
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          cp asr-log/log.txt /tmp/log.txt 2>/dev/null || echo "ingen logg" > /tmp/log.txt
+          git log --oneline -3 >> /tmp/log.txt; git status >> /tmp/log.txt 2>&1
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git checkout -q --orphan logg && git rm -rfq --cached . && cp /tmp/log.txt ./LOG.txt && git add LOG.txt && git commit -qm logg && git push -qf origin logg
